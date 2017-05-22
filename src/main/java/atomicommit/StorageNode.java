@@ -10,6 +10,8 @@ import org.zeromq.ZMQ.PollItem;
 import org.zeromq.ZThread;
 
 import java.util.Random;
+import java.util.List;
+import java.util.ArrayList;
 
 import javafx.util.Pair;
 
@@ -33,46 +35,51 @@ public class StorageNode implements ZThread.IDetachedRunnable {
 
   private class SlaveMessageHandler implements ZLoop.IZLoopHandler {
 
-    private int handleXACT() {
+    private int handleXACT(int trID) {
       Random rand = new Random();
-      int commitProba = 90;
+      int commitProba = 75;
       int randint = rand.nextInt(100);
       String choice = "NO";
       if (randint < commitProba) {
         choice = "YES";
       }
-      logger.debug("[Storage Node #{}] Received XACT - Proposed to commit? {}", myID, choice);
+      logger.debug("[Storage Node #{}] Received XACT for transaction #{}, proposed to commit? {}", myID, trID, choice);
 
-      channel.send(txManager, myID, choice);
+      List<String> messages = new ArrayList<String>();
+      messages.add("" + trID);
+      messages.add(choice);
+      channel.send(txManager, myID, messages);
 
       return 0;
     }
 
-    private int handleCOMMIT() {
-      logger.debug("[Storage Node #{}] Transaction commited", myID);
-      return -1;
+    private int handleCOMMIT(int trID) {
+      logger.debug("[Storage Node #{}] Transaction #{} commited", myID, trID);
+      return 0;
     }
 
-    private int handleABORT() {
-      logger.debug("[Storage Node #{}] Transaction aborted", myID);
-      return -1;
+    private int handleABORT(int trID) {
+      logger.debug("[Storage Node #{}] Transaction #{} aborted", myID, trID);
+      return 0;
     }
 
     @Override
     public int handle(ZLoop loop, PollItem item, Object arg_) {
-      Pair<NodeID,String> messagePair = channel.deliver();
-      String msg = messagePair.getValue();
+      Pair<NodeID,List<String>> messagePair = channel.deliver();
+      List<String> messages = messagePair.getValue();
+      int trID = new Integer(messages.get(0));
+      String msg = messages.get(1);
       NodeID src = messagePair.getKey();
       if (!(src.equals(txManager))) {
-        logger.debug("[Storage Node #{}] Message not coming from manager", myID);
+        logger.warn("[Storage Node #{}] Message {} not coming from manager", myID, msg);
       }
       switch(msg) {
         case "XACT":
-          return handleXACT();
+          return handleXACT(trID);
         case "COMMIT":
-          return handleCOMMIT();
+          return handleCOMMIT(trID);
         case "ABORT":
-          return handleABORT();
+          return handleABORT(trID);
       }
       return 0;
     }
