@@ -1,5 +1,8 @@
 package atomicommit;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import org.zeromq.ZMQ;
 import org.zeromq.ZLoop;
 import org.zeromq.ZMsg;
@@ -15,6 +18,7 @@ public class StorageNode implements ZThread.IDetachedRunnable {
   private final NodeID myID;
   private final NodeID txManager;
   private Channel channel;
+  private final Logger logger = LogManager.getLogger();
 
   StorageNode(NodeID id, NodeID manager) {
 
@@ -37,7 +41,7 @@ public class StorageNode implements ZThread.IDetachedRunnable {
       if (randint < commitProba) {
         choice = "YES";
       }
-      System.out.format("[Storage Node #%s] Received XACT - Proposed to commit? %s%n", myID, choice);
+      logger.debug("[Storage Node #{}] Received XACT - Proposed to commit? {}", myID, choice);
 
       channel.send(txManager, myID, choice);
 
@@ -45,12 +49,12 @@ public class StorageNode implements ZThread.IDetachedRunnable {
     }
 
     private int handleCOMMIT() {
-      System.out.format("[Storage Node #%s] Transaction commited%n", myID);
+      logger.debug("[Storage Node #{}] Transaction commited", myID);
       return -1;
     }
 
     private int handleABORT() {
-      System.out.format("[Storage Node #%s] Transaction aborted%n", myID);
+      logger.debug("[Storage Node #{}] Transaction aborted", myID);
       return -1;
     }
 
@@ -60,7 +64,7 @@ public class StorageNode implements ZThread.IDetachedRunnable {
       String msg = messagePair.getValue();
       NodeID src = messagePair.getKey();
       if (!(src.equals(txManager))) {
-        System.out.format("[Storage Node #%s] Message not coming from manager%n", myID);
+        logger.debug("[Storage Node #{}] Message not coming from manager", myID);
       }
       switch(msg) {
         case "XACT":

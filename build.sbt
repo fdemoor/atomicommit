@@ -20,5 +20,7 @@ autoScalaLibrary := false
 
 // library dependencies. (orginization name) % (project name) % (version)
 libraryDependencies ++= Seq(
-   "org.zeromq" % "jeromq" % "0.3.0"
+   "org.zeromq" % "jeromq" % "0.3.0",
+   "org.apache.logging.log4j" % "log4j-api" % "2.8.2",
+   "org.apache.logging.log4j" % "log4j-core" % "2.8.2"
 )

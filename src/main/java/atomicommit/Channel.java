@@ -1,5 +1,8 @@
 package atomicommit;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import org.zeromq.ZMQ;
 import org.zeromq.ZLoop;
 import org.zeromq.ZMsg;
@@ -16,6 +19,7 @@ public class Channel {
   private ZMQ.Context context;
   private ZMQ.Socket in;
   private HashMap<NodeID,ZMQ.Socket> out;
+  private final Logger logger = LogManager.getLogger();
 
   Channel() {
     context = ZMQ.context(1);
@@ -36,7 +40,7 @@ public class Channel {
   public void send(NodeID dest, NodeID srcID, String message) {
     ZMQ.Socket skt = out.get(dest);
     if (skt == null) {
-      System.out.println("No out channel for this destination");
+      logger.warn("No out channel for this destination");
     } else {
       ZMsg msg = new ZMsg();
       String src = "" + srcID.getID();

@@ -1,5 +1,8 @@
 package atomicommit;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.util.List;
 import java.util.Iterator;
 import java.util.ArrayList;
@@ -19,6 +22,7 @@ public class TransactionManager implements ZThread.IDetachedRunnable {
   private boolean decision;
   private final NodeID myID;
   private Channel channel;
+  private final Logger logger = LogManager.getLogger();
 
   TransactionManager(NodeID id, List<NodeID> servers) {
 
@@ -50,7 +54,7 @@ public class TransactionManager implements ZThread.IDetachedRunnable {
     private int handleYES(NodeID id) {
       if (!hasProposed.contains(id)) {
         hasProposed.add(id);
-        System.out.format("[Transaction Manager #%s] Received YES from Storage Node %s%n", myID, id);
+        logger.debug("[Transaction Manager #{}] Received YES from Storage Node {}", myID, id);
       }
       return checkAllHasProposed();
     }
@@ -59,7 +63,7 @@ public class TransactionManager implements ZThread.IDetachedRunnable {
       if (!hasProposed.contains(id)) {
         hasProposed.add(id);
         decision = false;
-        System.out.format("[Transaction Manager #%s] Received NO from Storage Node %s%n", myID, id);
+        logger.debug("[Transaction Manager #{}] Received NO from Storage Node {}", myID, id);
       }
       return checkAllHasProposed();
     }
@@ -68,10 +72,10 @@ public class TransactionManager implements ZThread.IDetachedRunnable {
       if (hasProposed.size() == storageNodes.size()) {
         if (decision) {
           sendToAllStorageNodes("COMMIT");
-          System.out.format("[Transaction Manager #%s] Decided to commit transaction%n", myID);
+          logger.debug("[Transaction Manager #{}] Decided to commit transaction", myID);
         } else {
           sendToAllStorageNodes("ABORT");
-          System.out.format("[Transaction Manager #%s] Decided to abort transaction%n", myID);
+          logger.debug("[Transaction Manager #{}] Decided to abort transaction", myID);
         }
         return -1;
       } else {
