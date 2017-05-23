@@ -1,7 +1,4 @@
-package atomicommit.perfectpointtopointlinks;
-
-import atomicommit.*;
-import atomicommit.eventhandler.*;
+package atomicommit;
 
 import java.util.List;
 import java.util.HashMap;

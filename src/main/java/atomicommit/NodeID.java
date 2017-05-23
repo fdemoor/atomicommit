@@ -2,21 +2,21 @@ package atomicommit;
 
 public class NodeID {
 
-  private final int ID;
-  private final String IP;
+  private final int id;
+  private final String ip;
 
   public NodeID(int d) {
-    ID = d;
-    String nb = "" + (6585 + ID);
-    IP = "tcp://localhost:" + nb;
+    id = d;
+    String nb = "" + (6585 + id);
+    ip = "tcp://localhost:" + nb;
   }
 
   public int getID() {
-    return ID;
+    return id;
   }
 
   public String getIP() {
-    return IP;
+    return ip;
   }
 
   @Override
@@ -25,14 +25,14 @@ public class NodeID {
     if (other == this) return true;
     if (!(other instanceof NodeID)) return false;
     NodeID otherNodeID = (NodeID) other;
-    if (otherNodeID.getID() == ID) {
+    if (otherNodeID.getID() == id) {
       return true;
     }
     return false;
   }
 
   public String toString() {
-    return "" + ID;
+    return "" + id;
   }
 
 }

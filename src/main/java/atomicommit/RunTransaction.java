@@ -1,6 +1,4 @@
-package atomicommit.eventhandler;
-
-import atomicommit.*;
+package atomicommit;
 
 public class RunTransaction implements EventHandler {
 

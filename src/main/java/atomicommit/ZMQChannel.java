@@ -1,7 +1,4 @@
-package atomicommit.perfectpointtopointlinks;
-
-import atomicommit.*;
-import atomicommit.eventhandler.*;
+package atomicommit;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

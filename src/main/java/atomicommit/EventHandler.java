@@ -1,4 +1,4 @@
-package atomicommit.eventhandler;
+package atomicommit;
 
 public interface EventHandler {
 
