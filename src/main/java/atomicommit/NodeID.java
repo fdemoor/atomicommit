@@ -5,7 +5,7 @@ public class NodeID {
   private final int ID;
   private final String IP;
 
-  NodeID(int d) {
+  public NodeID(int d) {
     ID = d;
     String nb = "" + (6585 + ID);
     IP = "tcp://localhost:" + nb;

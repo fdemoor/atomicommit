@@ -1,4 +1,7 @@
-package atomicommit;
+package atomicommit.perfectpointtopointlinks;
+
+import atomicommit.*;
+import atomicommit.eventhandler.*;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -7,6 +10,7 @@ import org.zeromq.ZMQ;
 import org.zeromq.ZLoop;
 import org.zeromq.ZMsg;
 import org.zeromq.ZMQ.PollItem;
+import org.zeromq.ZThread;
 
 import java.util.List;
 import java.util.HashMap;
@@ -16,16 +20,34 @@ import java.util.ArrayList;
 
 import javafx.util.Pair;
 
-public class Channel {
+public class ZMQChannel implements PerfectPointToPointLinks {
 
   private ZMQ.Context context;
   private ZMQ.Socket in;
   private HashMap<NodeID,ZMQ.Socket> out;
+  private ZLoop reactor;
   private final Logger logger = LogManager.getLogger();
 
-  Channel() {
+  public ZMQChannel() {
     context = ZMQ.context(1);
     out = new HashMap<NodeID,ZMQ.Socket>();
+    reactor = new ZLoop();
+  }
+
+  private class ZMQEventhandler implements ZLoop.IZLoopHandler {
+
+    private final EventHandler handler;
+
+    ZMQEventhandler(EventHandler h) {
+      handler = h;
+    }
+
+    @Override
+    public int handle(ZLoop loop, PollItem item, Object arg_) {
+      handler.handle(arg_);
+      return 0;
+    }
+
   }
 
   public void setIn(NodeID id) {
@@ -82,13 +104,19 @@ public class Channel {
     return result;
   }
 
-  public void setInEventHandler(ZLoop reactor, ZLoop.IZLoopHandler handler, Object arg_) {
+  public void setMessageEventHandler(EventHandler handler) {
+    ZMQEventhandler h = new ZMQEventhandler(handler);
     PollItem item = new PollItem(in, ZMQ.Poller.POLLIN);
-    reactor.addPoller(item, handler, arg_);
+    reactor.addPoller(item, h, null);
   }
 
-  public void setTimerHandler(ZLoop reactor, ZLoop.IZLoopHandler handler, Object arg_, int delay, int times) {
-    reactor.addTimer(delay, times, handler, arg_);
+  public void setTimeoutEventHandler(EventHandler handler, int delay, int times) {
+    ZMQEventhandler h = new ZMQEventhandler(handler);
+    reactor.addTimer(delay, times, h, null);
+  }
+
+  public void startPolling() {
+    reactor.start();
   }
 
   public void close() {
