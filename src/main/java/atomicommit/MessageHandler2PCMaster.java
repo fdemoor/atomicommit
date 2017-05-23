@@ -3,17 +3,13 @@ package atomicommit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.List;
-
-import javafx.util.Pair;
-
 public class MessageHandler2PCMaster implements EventHandler {
 
   private final PerfectPointToPointLinks channel;
   private TransactionManager trMng;
   private final Logger logger = LogManager.getLogger();
 
-  public MessageHandler2PCMaster(PerfectPointToPointLinks ch, TransactionManager manager) {
+  MessageHandler2PCMaster(PerfectPointToPointLinks ch, TransactionManager manager) {
     channel = ch;
     trMng = manager;
   }
@@ -22,10 +18,12 @@ public class MessageHandler2PCMaster implements EventHandler {
     Transaction transaction = trMng.getTransaction(trID);
     if (transaction.setVote(id, vote)) {
       if (transaction.getDecision()) {
-        trMng.sendToAllStorageNodes(trID, "COMMIT");
+        Message message = new Message(trMng.getID(), trID, MessageType.TR_COMMIT);
+        trMng.sendToAllStorageNodes(message);
         logger.debug("[Transaction #{}] Decided to commit transaction", trID);
       } else {
-        trMng.sendToAllStorageNodes(trID, "ABORT");
+        Message message = new Message(trMng.getID(), trID, MessageType.TR_ABORT);
+        trMng.sendToAllStorageNodes(message);
         logger.debug("[Transaction #{}] Decided to abort transaction", trID);
       }
     }
@@ -33,16 +31,15 @@ public class MessageHandler2PCMaster implements EventHandler {
 
   @Override
   public void handle(Object arg_) {
-    Pair<NodeID,List<String>> messagePair = channel.deliver();
-    List<String> messages = messagePair.getValue();
-    int trID = new Integer(messages.get(0));
-    String msg = messages.get(1);
-    NodeID src = messagePair.getKey();
-    switch(msg) {
-      case "YES":
+    Message message = channel.deliver();
+    int trID = message.getID();
+    MessageType type = message.getType();
+    NodeID src = message.getSrc();
+    switch(type) {
+      case TR_YES:
         handleVote(trID, src, true);
         break;
-      case "NO":
+      case TR_NO:
         handleVote(trID, src, false);
         break;
     }

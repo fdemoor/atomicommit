@@ -8,25 +8,25 @@ import org.zeromq.ZThread;
 public class StorageNode implements ZThread.IDetachedRunnable {
 
   private final NodeID myID;
-  private final NodeID txManager;
+  private final NodeID trManager;
   private PerfectPointToPointLinks channel;
   private final Logger logger = LogManager.getLogger();
 
   StorageNode(NodeID id, NodeID manager) {
 
     myID = id;
-    txManager = manager;
+    trManager = manager;
 
     channel = new ZMQChannel();
     channel.setIn(myID);
-    channel.addOut(txManager);
+    channel.addOut(trManager);
 
   }
 
   @Override
   public void run(Object[] args) {
 
-    EventHandler handler = new MessageHandler2PCSlave(channel, myID, txManager);
+    EventHandler handler = new MessageHandler2PCSlave(channel, myID, trManager);
     channel.setMessageEventHandler(handler);
 
     channel.startPolling();

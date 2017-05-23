@@ -9,13 +9,9 @@ import org.zeromq.ZMsg;
 import org.zeromq.ZMQ.PollItem;
 import org.zeromq.ZThread;
 
-import java.util.List;
 import java.util.HashMap;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.ArrayList;
-
-import javafx.util.Pair;
 
 public class ZMQChannel implements PerfectPointToPointLinks {
 
@@ -58,47 +54,26 @@ public class ZMQChannel implements PerfectPointToPointLinks {
     out.put(id, skt);
   }
 
-  public void send(NodeID dest, NodeID srcID, String message) {
+  public void send(NodeID dest, Message message) {
     ZMQ.Socket skt = out.get(dest);
     if (skt == null) {
       logger.warn("No out channel for this destination");
     } else {
       ZMsg msg = new ZMsg();
-      String src = "" + srcID.getID();
-      msg.add(src);
-      msg.add(message);
+      msg.add("" + message.getSrc().getID());
+      msg.add("" + message.getID());
+      msg.add(message.getType().name());
       msg.send(skt);
     }
   }
 
-  public void send(NodeID dest, NodeID srcID, List<String> messages) {
-    ZMQ.Socket skt = out.get(dest);
-    if (skt == null) {
-      logger.warn("No out channel for this destination");
-    } else {
-      ZMsg msg = new ZMsg();
-      String src = "" + srcID.getID();
-      msg.add(src);
-      Iterator<String> it = messages.iterator();
-      while (it.hasNext()) {
-        msg.add(it.next());
-      }
-      msg.send(skt);
-    }
-  }
-
-  public Pair<NodeID,List<String>> deliver() {
+  public Message deliver() {
     ZMsg msg = ZMsg.recvMsg(in);
-    String message = msg.popString();
-    NodeID src = new NodeID(new Integer(message));
-    List<String> messages = new ArrayList<String>();
-    message = msg.popString();
-    while (message != null) {
-      messages.add(message);
-      message = msg.popString();
-    }
-    Pair<NodeID,List<String>> result = new Pair<NodeID,List<String>>(src, messages);
-    return result;
+    NodeID src = new NodeID(Integer.parseInt(msg.popString()));
+    int id = Integer.parseInt(msg.popString());
+    MessageType type = MessageType.valueOf(msg.popString());
+    Message message = new Message(src, id, type);
+    return message;
   }
 
   public void setMessageEventHandler(EventHandler handler) {

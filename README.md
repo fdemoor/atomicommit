@@ -19,6 +19,6 @@ This project is under the GNU General Public License v3.0 - see the [LICENSE.md]
 
 ## TODO
 
-- [ ] Message wrapper class (remove javafx.util.Pair)
+- [x] Message wrapper class (remove javafx.util.Pair)
 - [ ] Fix relations between node and event handlers classes (some methods should not be public)
 - [ ] System structure (Client app, query processor, storage engine, storage nodes)

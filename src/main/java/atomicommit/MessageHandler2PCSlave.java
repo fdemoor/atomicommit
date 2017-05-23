@@ -4,21 +4,17 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.Random;
-import java.util.List;
-import java.util.ArrayList;
-
-import javafx.util.Pair;
 
 public class MessageHandler2PCSlave implements EventHandler {
 
   private final NodeID myID;
   private final PerfectPointToPointLinks channel;
-  private final NodeID txManager;
+  private final NodeID trManager;
   private final Logger logger = LogManager.getLogger();
 
-  public MessageHandler2PCSlave(PerfectPointToPointLinks ch, NodeID id, NodeID txID) {
+  MessageHandler2PCSlave(PerfectPointToPointLinks ch, NodeID id, NodeID txID) {
     channel = ch;
-    txManager = txID;
+    trManager = txID;
     myID = id;
   }
 
@@ -26,16 +22,14 @@ public class MessageHandler2PCSlave implements EventHandler {
     Random rand = new Random();
     int commitProba = 75;
     int randint = rand.nextInt(100);
-    String choice = "NO";
+    MessageType choice = MessageType.TR_NO;
     if (randint < commitProba) {
-      choice = "YES";
+      choice = MessageType.TR_YES;
     }
     logger.debug("[Storage Node #{}] Received XACT for transaction #{}, proposed to commit? {}", myID, trID, choice);
 
-    List<String> messages = new ArrayList<String>();
-    messages.add("" + trID);
-    messages.add(choice);
-    channel.send(txManager, myID, messages);
+    Message message = new Message(myID, trID, choice);
+    channel.send(trManager, message);
   }
 
   private void handleCOMMIT(int trID) {
@@ -48,22 +42,21 @@ public class MessageHandler2PCSlave implements EventHandler {
 
   @Override
   public void handle(Object arg_) {
-    Pair<NodeID,List<String>> messagePair = channel.deliver();
-    List<String> messages = messagePair.getValue();
-    int trID = new Integer(messages.get(0));
-    String msg = messages.get(1);
-    NodeID src = messagePair.getKey();
-    if (!(src.equals(txManager))) {
-      logger.warn("[Storage Node #{}] Message {} not coming from manager", myID, msg);
+    Message message = channel.deliver();
+    int trID = message.getID();
+    MessageType type = message.getType();
+    NodeID src = message.getSrc();
+    if (!(src.equals(trManager))) {
+      logger.warn("[Storage Node #{}] Message {} not coming from manager", myID, type);
     }
-    switch(msg) {
-      case "XACT":
+    switch(type) {
+      case TR_XACT:
         handleXACT(trID);
         break;
-      case "COMMIT":
+      case TR_COMMIT:
         handleCOMMIT(trID);
         break;
-      case "ABORT":
+      case TR_ABORT:
         handleABORT(trID);
         break;
     }

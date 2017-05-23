@@ -5,7 +5,6 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.List;
 import java.util.Iterator;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.zeromq.ZThread;
@@ -47,21 +46,23 @@ public class TransactionManager implements ZThread.IDetachedRunnable {
 
   public void tryCommit(int trID) {
     logger.debug("[Transaction Manager #{}] Trying to commit transaction #{}", myID, trID);
-    sendToAllStorageNodes(trID, "XACT");
+    Message message = new Message(myID, trID, MessageType.TR_XACT);
+    sendToAllStorageNodes(message);
   }
 
-  public void sendToAllStorageNodes(int trID, String message) {
-    List<String> messages = new ArrayList<String>(2);
-    messages.add("" + trID);
-    messages.add(message);
+  public void sendToAllStorageNodes(Message message) {
     Iterator<NodeID> it = storageNodes.iterator();
     while (it.hasNext()) {
-      channel.send(it.next(), myID, messages);
+      channel.send(it.next(), message);
     }
   }
 
   public Transaction getTransaction(int trID) {
     return transactions.get(trID);
+  }
+
+  public NodeID getID() {
+    return myID;
   }
 
   @Override

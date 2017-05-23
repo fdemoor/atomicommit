@@ -4,7 +4,7 @@ public class RunTransaction implements EventHandler {
 
   private TransactionManager trMng;
 
-  public RunTransaction(TransactionManager manager) {
+  RunTransaction(TransactionManager manager) {
     trMng = manager;
   }
 
