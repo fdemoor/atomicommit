@@ -8,6 +8,8 @@ public enum MessageType {
   TR_ABORT,
   TR_YES,
   TR_NO,
-  TR_START
+  TR_START,
+  TR_ACK,
+  TR_HELP
 
 }

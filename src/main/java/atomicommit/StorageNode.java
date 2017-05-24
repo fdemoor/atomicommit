@@ -11,9 +11,9 @@ public class StorageNode extends Node implements ZThread.IDetachedRunnable {
 
   private final NodeID myID;
   private final NodeID trManager;
-  private HashMap<Integer, Transaction> transactions;
+  private final HashMap<Integer, TransactionWrapper> transactions;
   private final NodeIDWrapper nodesWrapper;
-  private PerfectPointToPointLinks channel;
+  private final PerfectPointToPointLinks channel;
   private final Logger logger = LogManager.getLogger();
 
   StorageNode(int id, int manager) {
@@ -21,7 +21,7 @@ public class StorageNode extends Node implements ZThread.IDetachedRunnable {
     nodesWrapper = new NodeIDWrapper(id);
     myID = nodesWrapper.getNodeID(id);
     trManager = nodesWrapper.getNodeID(manager);
-    transactions = new HashMap<Integer, Transaction>();
+    transactions = new HashMap<Integer, TransactionWrapper>();
 
     channel = new ZMQChannel(nodesWrapper);
     channel.setIn(myID);
@@ -29,19 +29,35 @@ public class StorageNode extends Node implements ZThread.IDetachedRunnable {
 
   }
 
+  private class TransactionWrapper {
+
+    private final Transaction transaction;
+    private final TRProtocolInfo info;
+
+    TransactionWrapper(Transaction tr, TRProtocolInfo prt) {
+      transaction = tr;
+      info = prt;
+    }
+
+  }
+
   void startTransaction(int trID) {
     logger.debug("Storage Node #{} starts transaction #{}", myID, trID);
     Transaction tr = new Transaction(trID);
-    transactions.put(trID, tr);
+    transactions.put(trID, new TransactionWrapper(tr, null));
+  }
+
+  TRProtocolInfo getTransactionInfo(int trID) {
+    return transactions.get(trID).info;
   }
 
   void commitTransaction(int trID) {
-    transactions.get(trID).commit();
+    transactions.get(trID).transaction.commit();
     logger.debug("Storage Node #{} commits transaction #{}", myID, trID);
   }
 
   void abortTransaction(int trID) {
-    transactions.get(trID).abort();
+    transactions.get(trID).transaction.abort();
     logger.debug("Storage Node #{} aborts transaction #{}", myID, trID);
   }
 

@@ -13,18 +13,18 @@ import org.zeromq.ZThread;
 public class TransactionManager extends Node implements ZThread.IDetachedRunnable {
 
   private final List<Integer> storageNodes;
-  private HashMap<Integer, TransactionWrapper> transactions;
+  private final HashMap<Integer, TransactionWrapper> transactions;
   private final NodeID myID;
   private final NodeIDWrapper nodesWrapper;
-  private PerfectPointToPointLinks channel;
+  private final PerfectPointToPointLinks channel;
   private final Logger logger = LogManager.getLogger();
-  private Counter transactionIDs;
+  private final Counter transactionIDs;
 
   private class TransactionWrapper {
 
-    private Transaction transaction;
+    private final Transaction transaction;
     private final int nbInvolvedNodes;
-    private ArrayList<NodeID> hasProposed;
+    private final ArrayList<NodeID> hasProposed;
     private boolean decision;
     private boolean hasDecided;
 
