@@ -17,14 +17,14 @@ public class TransactionManager implements ZThread.IDetachedRunnable {
   private final NodeIDWrapper nodesWrapper;
   private PerfectPointToPointLinks channel;
   private final Logger logger = LogManager.getLogger();
-  private int counter;
+  private Counter transactionIDs;
 
   TransactionManager(int id, List<Integer> servers) {
 
     nodesWrapper = new NodeIDWrapper(id);
     storageNodes = servers;
     myID = nodesWrapper.getNodeID(id);
-    counter = 0;
+    transactionIDs = new Counter();
 
     transactions = new HashMap<Integer,Transaction>();
 
@@ -39,7 +39,8 @@ public class TransactionManager implements ZThread.IDetachedRunnable {
   }
 
   int startTransaction() {
-    int trID = counter++;
+    int trID = transactionIDs.get();
+    transactionIDs.incr();
     Transaction tr = new Transaction(trID, storageNodes.size());
     logger.debug("Transaction Manager #{} starts transaction #{}", myID, trID);
     transactions.put(trID, tr);
