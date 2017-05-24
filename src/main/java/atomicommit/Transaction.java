@@ -30,11 +30,11 @@ public class Transaction {
     decision = true;
   }
 
-  public boolean setVote(NodeID id, boolean vote) {
+  boolean setVote(NodeID id, boolean vote) {
 
     if (!hasProposed.contains(id)) {
       hasProposed.add(id);
-      logger.debug("[Transaction #{}] Received {} from Storage Node {}", myID, vote, id);
+      logger.debug("Received {} from Storage Node #{} for transaction #{}", vote, id, myID);
     }
     if (!vote) {
       decision = false;
@@ -45,11 +45,11 @@ public class Transaction {
     return hasDecided;
   }
 
-  public boolean getDecision() {
+  boolean getDecision() {
     if (hasDecided) {
       return decision;
     } else {
-      logger.warn("[Transaction #{}] Trying to obtain decision value while not yet determined", myID);
+      logger.warn("Trying to obtain decision value from transaction #{} while not yet determined", myID);
       return false;
     }
   }

@@ -13,15 +13,18 @@ import java.util.HashMap;
 import java.util.Collection;
 import java.util.Iterator;
 
-public class ZMQChannel implements PerfectPointToPointLinks {
+class ZMQChannel implements PerfectPointToPointLinks {
 
-  private ZMQ.Context context;
+  private final ZMQ.Context context;
   private ZMQ.Socket in;
+  private NodeID owner;
   private HashMap<NodeID,ZMQ.Socket> out;
-  private ZLoop reactor;
+  private final ZLoop reactor;
+  private final NodeIDWrapper nodesWrapper;
   private final Logger logger = LogManager.getLogger();
 
-  public ZMQChannel() {
+  public ZMQChannel(NodeIDWrapper wrapper) {
+    nodesWrapper = wrapper;
     context = ZMQ.context(1);
     out = new HashMap<NodeID,ZMQ.Socket>();
     reactor = new ZLoop();
@@ -44,6 +47,10 @@ public class ZMQChannel implements PerfectPointToPointLinks {
   }
 
   public void setIn(NodeID id) {
+    if (owner != null) {
+      logger.warn("An In-Socket is already defined");
+    }
+    owner = id;
     in = context.socket(ZMQ.DEALER);
     in.bind(id.getIP());
   }
@@ -56,6 +63,9 @@ public class ZMQChannel implements PerfectPointToPointLinks {
 
   public void send(NodeID dest, Message message) {
     ZMQ.Socket skt = out.get(dest);
+    if (message.getSrc() != owner) {
+      logger.warn("Trying to send a message from someone else");
+    }
     if (skt == null) {
       logger.warn("No out channel for this destination");
     } else {
@@ -64,15 +74,17 @@ public class ZMQChannel implements PerfectPointToPointLinks {
       msg.add("" + message.getID());
       msg.add(message.getType().name());
       msg.send(skt);
+      logger.debug("Node #{} sent [{}, {}] to node #{}", message.getSrc(), message.getID(), message.getType(), dest);
     }
   }
 
   public Message deliver() {
     ZMsg msg = ZMsg.recvMsg(in);
-    NodeID src = new NodeID(Integer.parseInt(msg.popString()));
+    NodeID src = nodesWrapper.getNodeID(Integer.parseInt(msg.popString()));
     int id = Integer.parseInt(msg.popString());
     MessageType type = MessageType.valueOf(msg.popString());
     Message message = new Message(src, id, type);
+    logger.debug("Node #{} received [{}, {}] from node #{}", owner, message.getID(), message.getType(), message.getSrc());
     return message;
   }
 

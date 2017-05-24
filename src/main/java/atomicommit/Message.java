@@ -12,16 +12,15 @@ public class Message {
     type = msgType;
   }
 
-  public NodeID getSrc() {
+  NodeID getSrc() {
     return src;
   }
 
-  public int getID() {
+  int getID() {
     return id;
   }
 
-  public MessageType getType() {
+  MessageType getType() {
     return type;
   }
-  
 }

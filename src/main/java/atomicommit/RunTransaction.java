@@ -2,7 +2,7 @@ package atomicommit;
 
 public class RunTransaction implements EventHandler {
 
-  private TransactionManager trMng;
+  private final TransactionManager trMng;
 
   RunTransaction(TransactionManager manager) {
     trMng = manager;

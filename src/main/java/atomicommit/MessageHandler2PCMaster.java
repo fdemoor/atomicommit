@@ -5,12 +5,10 @@ import org.apache.logging.log4j.Logger;
 
 public class MessageHandler2PCMaster implements EventHandler {
 
-  private final PerfectPointToPointLinks channel;
-  private TransactionManager trMng;
+  private final TransactionManager trMng;
   private final Logger logger = LogManager.getLogger();
 
-  MessageHandler2PCMaster(PerfectPointToPointLinks ch, TransactionManager manager) {
-    channel = ch;
+  MessageHandler2PCMaster(TransactionManager manager) {
     trMng = manager;
   }
 
@@ -18,20 +16,18 @@ public class MessageHandler2PCMaster implements EventHandler {
     Transaction transaction = trMng.getTransaction(trID);
     if (transaction.setVote(id, vote)) {
       if (transaction.getDecision()) {
-        Message message = new Message(trMng.getID(), trID, MessageType.TR_COMMIT);
-        trMng.sendToAllStorageNodes(message);
-        logger.debug("[Transaction #{}] Decided to commit transaction", trID);
+        trMng.sendToAllStorageNodes(trID, MessageType.TR_COMMIT);
+        trMng.commitTransaction(trID);
       } else {
-        Message message = new Message(trMng.getID(), trID, MessageType.TR_ABORT);
-        trMng.sendToAllStorageNodes(message);
-        logger.debug("[Transaction #{}] Decided to abort transaction", trID);
+        trMng.sendToAllStorageNodes(trID, MessageType.TR_ABORT);
+        trMng.abortTransaction(trID);;
       }
     }
   }
 
   @Override
   public void handle(Object arg_) {
-    Message message = channel.deliver();
+    Message message = trMng.deliverMessage();
     int trID = message.getID();
     MessageType type = message.getType();
     NodeID src = message.getSrc();

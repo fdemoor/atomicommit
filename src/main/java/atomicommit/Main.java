@@ -6,12 +6,11 @@ import org.zeromq.ZThread;
 
 public class Main {
   public static void main(String[] args) {
-    NodeID managerID = new NodeID(0);
-    ArrayList<NodeID> storageIDs = new ArrayList<NodeID>();
+    int managerID = 0;
+    ArrayList<Integer> storageIDs = new ArrayList<Integer>();
     for (int i = 1; i < 4; i++) {
-      NodeID id = new NodeID(i);
-      storageIDs.add(id);
-      ZThread.start(new StorageNode(id, managerID));
+      storageIDs.add(i);
+      ZThread.start(new StorageNode(i, managerID));
     }
 
     ZThread.start(new TransactionManager(managerID, storageIDs));

@@ -20,5 +20,9 @@ This project is under the GNU General Public License v3.0 - see the [LICENSE.md]
 ## TODO
 
 - [x] Message wrapper class (remove javafx.util.Pair)
-- [ ] Fix relations between node and event handlers classes (some methods should not be public)
+- [x] Fix relations between node and event handlers classes (some methods should not be public)
 - [ ] System structure (Client app, query processor, storage engine, storage nodes)
+- [ ] Add Timeout for receiving messages
+- [ ] Parameter configuration
+- [ ] Consensus interface
+- [ ] Raft leader election implementation for consensus?

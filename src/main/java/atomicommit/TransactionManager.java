@@ -11,64 +11,74 @@ import org.zeromq.ZThread;
 
 public class TransactionManager implements ZThread.IDetachedRunnable {
 
-  private final List<NodeID> storageNodes;
+  private final List<Integer> storageNodes;
   private HashMap<Integer, Transaction> transactions;
   private final NodeID myID;
+  private final NodeIDWrapper nodesWrapper;
   private PerfectPointToPointLinks channel;
   private final Logger logger = LogManager.getLogger();
   private int counter;
 
-  TransactionManager(NodeID id, List<NodeID> servers) {
+  TransactionManager(int id, List<Integer> servers) {
 
+    nodesWrapper = new NodeIDWrapper(id);
     storageNodes = servers;
-    myID = id;
+    myID = nodesWrapper.getNodeID(id);
     counter = 0;
 
     transactions = new HashMap<Integer,Transaction>();
 
-    channel = new ZMQChannel();
+    channel = new ZMQChannel(nodesWrapper);
     channel.setIn(myID);
-    Iterator<NodeID> it = storageNodes.iterator();
+    Iterator<Integer> it = storageNodes.iterator();
     while (it.hasNext()) {
-      NodeID idNode = it.next();
+      NodeID idNode = nodesWrapper.getNodeID(it.next());
       channel.addOut(idNode);
     }
 
   }
 
-  public int startTransaction() {
+  int startTransaction() {
     int trID = counter++;
     Transaction tr = new Transaction(trID, storageNodes.size());
-    logger.debug("[Transaction Manager #{}] Started transaction #{}", myID, trID);
+    logger.debug("Transaction Manager #{} starts transaction #{}", myID, trID);
     transactions.put(trID, tr);
     return trID;
   }
 
-  public void tryCommit(int trID) {
-    logger.debug("[Transaction Manager #{}] Trying to commit transaction #{}", myID, trID);
-    Message message = new Message(myID, trID, MessageType.TR_XACT);
-    sendToAllStorageNodes(message);
+  void tryCommit(int trID) {
+    logger.debug("Transaction Manager #{} tries to commit transaction #{}", myID, trID);
+    sendToAllStorageNodes(trID, MessageType.TR_XACT);
   }
 
-  public void sendToAllStorageNodes(Message message) {
-    Iterator<NodeID> it = storageNodes.iterator();
+  void commitTransaction(int trID) {
+    logger.debug("Transaction Manager #{} commits transaction #{}", myID, trID);
+  }
+
+  void abortTransaction(int trID) {
+    logger.debug("Transaction Manager #{} aborts transaction #{}", myID, trID);
+  }
+
+  void sendToAllStorageNodes(int id, MessageType type) {
+    Message message = new Message(myID, id, type);
+    Iterator<Integer> it = storageNodes.iterator();
     while (it.hasNext()) {
-      channel.send(it.next(), message);
+      channel.send(nodesWrapper.getNodeID(it.next()), message);
     }
   }
 
-  public Transaction getTransaction(int trID) {
-    return transactions.get(trID);
+  Message deliverMessage() {
+    return channel.deliver();
   }
 
-  public NodeID getID() {
-    return myID;
+  Transaction getTransaction(int trID) {
+    return transactions.get(trID);
   }
 
   @Override
   public void run(Object[] args) {
 
-    EventHandler handler = new MessageHandler2PCMaster(channel, this);
+    EventHandler handler = new MessageHandler2PCMaster(this);
     channel.setMessageEventHandler(handler);
 
     EventHandler handlerTimer = new RunTransaction(this);
