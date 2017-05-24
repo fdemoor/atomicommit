@@ -8,7 +8,6 @@ public class RunTransaction implements EventHandler {
     trMng = manager;
   }
 
-  @Override
   public void handle(Object arg_) {
     int trID = trMng.startTransaction();
     trMng.tryCommit(trID);

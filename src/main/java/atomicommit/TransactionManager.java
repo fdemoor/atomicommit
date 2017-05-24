@@ -4,20 +4,63 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.HashMap;
 
 import org.zeromq.ZThread;
 
-public class TransactionManager implements ZThread.IDetachedRunnable {
+public class TransactionManager extends Node implements ZThread.IDetachedRunnable {
 
   private final List<Integer> storageNodes;
-  private HashMap<Integer, Transaction> transactions;
+  private HashMap<Integer, TransactionWrapper> transactions;
   private final NodeID myID;
   private final NodeIDWrapper nodesWrapper;
   private PerfectPointToPointLinks channel;
   private final Logger logger = LogManager.getLogger();
   private Counter transactionIDs;
+
+  private class TransactionWrapper {
+
+    private Transaction transaction;
+    private final int nbInvolvedNodes;
+    private ArrayList<NodeID> hasProposed;
+    private boolean decision;
+    private boolean hasDecided;
+
+    TransactionWrapper(Transaction tr, int n) {
+      transaction = tr;
+      nbInvolvedNodes = n;
+      hasProposed = new ArrayList();
+      hasDecided = false;
+      decision = true;
+    }
+
+    boolean setVote(NodeID id, boolean vote) {
+
+      if (!hasProposed.contains(id)) {
+        hasProposed.add(id);
+        logger.debug("Received {} from Storage Node #{} for transaction #{}", vote, id, transaction.getID());
+      }
+      if (!vote) {
+        decision = false;
+      }
+      if (hasProposed.size() == nbInvolvedNodes) {
+        hasDecided = true;
+      }
+      return hasDecided;
+    }
+
+    boolean getDecision() {
+      if (hasDecided) {
+        return decision;
+      } else {
+        logger.warn("Trying to obtain decision value from transaction #{} while not yet determined", myID);
+        return false;
+      }
+    }
+
+  }
 
   TransactionManager(int id, List<Integer> servers) {
 
@@ -26,7 +69,7 @@ public class TransactionManager implements ZThread.IDetachedRunnable {
     myID = nodesWrapper.getNodeID(id);
     transactionIDs = new Counter();
 
-    transactions = new HashMap<Integer,Transaction>();
+    transactions = new HashMap<Integer,TransactionWrapper>();
 
     channel = new ZMQChannel(nodesWrapper);
     channel.setIn(myID);
@@ -41,9 +84,9 @@ public class TransactionManager implements ZThread.IDetachedRunnable {
   int startTransaction() {
     int trID = transactionIDs.get();
     transactionIDs.incr();
-    Transaction tr = new Transaction(trID, storageNodes.size());
+    Transaction tr = new Transaction(trID);
     logger.debug("Transaction Manager #{} starts transaction #{}", myID, trID);
-    transactions.put(trID, tr);
+    transactions.put(trID, new TransactionWrapper(tr, storageNodes.size()));
     return trID;
   }
 
@@ -53,11 +96,21 @@ public class TransactionManager implements ZThread.IDetachedRunnable {
   }
 
   void commitTransaction(int trID) {
-    logger.debug("Transaction Manager #{} commits transaction #{}", myID, trID);
+    Transaction tr = transactions.get(trID).transaction;
+    tr.commit();
   }
 
   void abortTransaction(int trID) {
-    logger.debug("Transaction Manager #{} aborts transaction #{}", myID, trID);
+    Transaction tr = transactions.get(trID).transaction;
+    tr.abort();
+  }
+
+  boolean setTransactionVote(int trID, NodeID id, boolean vote) {
+    return transactions.get(trID).setVote(id, vote);
+  }
+
+  boolean getTransactionDecision(int trID) {
+    return transactions.get(trID).getDecision();
   }
 
   void sendToAllStorageNodes(int id, MessageType type) {
@@ -72,15 +125,14 @@ public class TransactionManager implements ZThread.IDetachedRunnable {
     return channel.deliver();
   }
 
-  Transaction getTransaction(int trID) {
-    return transactions.get(trID);
-  }
-
   @Override
   public void run(Object[] args) {
 
-    EventHandler handler = new MessageHandler2PCMaster(this);
-    channel.setMessageEventHandler(handler);
+    MessageHandler msgHandler = new MessageHandler(this);
+    EventHandler handler = new MsgHandler2PCMaster(this);
+    msgHandler.setTransactionHandler(handler);
+    channel.setMessageEventHandler(msgHandler);
+
 
     EventHandler handlerTimer = new RunTransaction(this);
     channel.setTimeoutEventHandler(handlerTimer, 1, 3);

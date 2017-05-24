@@ -3,19 +3,18 @@ package atomicommit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class MessageHandler2PCMaster implements EventHandler {
+public class MsgHandler2PCMaster implements EventHandler {
 
   private final TransactionManager trMng;
   private final Logger logger = LogManager.getLogger();
 
-  MessageHandler2PCMaster(TransactionManager manager) {
+  MsgHandler2PCMaster(TransactionManager manager) {
     trMng = manager;
   }
 
   private void handleVote(int trID, NodeID id, boolean vote) {
-    Transaction transaction = trMng.getTransaction(trID);
-    if (transaction.setVote(id, vote)) {
-      if (transaction.getDecision()) {
+    if (trMng.setTransactionVote(trID, id, vote)) {
+      if (trMng.getTransactionDecision(trID)) {
         trMng.sendToAllStorageNodes(trID, MessageType.TR_COMMIT);
         trMng.commitTransaction(trID);
       } else {
@@ -25,9 +24,8 @@ public class MessageHandler2PCMaster implements EventHandler {
     }
   }
 
-  @Override
   public void handle(Object arg_) {
-    Message message = trMng.deliverMessage();
+    Message message = (Message) arg_;
     int trID = message.getID();
     MessageType type = message.getType();
     NodeID src = message.getSrc();

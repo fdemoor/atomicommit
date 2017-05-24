@@ -7,6 +7,7 @@ public enum MessageType {
   TR_COMMIT,
   TR_ABORT,
   TR_YES,
-  TR_NO
+  TR_NO,
+  TR_START
 
 }

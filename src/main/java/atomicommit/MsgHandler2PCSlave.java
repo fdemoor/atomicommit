@@ -5,12 +5,12 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.Random;
 
-public class MessageHandler2PCSlave implements EventHandler {
+public class MsgHandler2PCSlave implements EventHandler {
 
   private final StorageNode node;
   private final Logger logger = LogManager.getLogger();
 
-  MessageHandler2PCSlave(StorageNode n) {
+  MsgHandler2PCSlave(StorageNode n) {
     node = n;
   }
 
@@ -28,9 +28,8 @@ public class MessageHandler2PCSlave implements EventHandler {
 
   }
 
-  @Override
   public void handle(Object arg_) {
-    Message message = node.deliverMessage();
+    Message message = (Message) arg_;
     int trID = message.getID();
     MessageType type = message.getType();
     NodeID src = message.getSrc();

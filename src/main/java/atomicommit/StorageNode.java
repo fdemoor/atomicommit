@@ -5,7 +5,7 @@ import org.apache.logging.log4j.Logger;
 
 import org.zeromq.ZThread;
 
-public class StorageNode implements ZThread.IDetachedRunnable {
+public class StorageNode extends Node implements ZThread.IDetachedRunnable {
 
   private final NodeID myID;
   private final NodeID trManager;
@@ -53,8 +53,10 @@ public class StorageNode implements ZThread.IDetachedRunnable {
   @Override
   public void run(Object[] args) {
 
-    EventHandler handler = new MessageHandler2PCSlave(this);
-    channel.setMessageEventHandler(handler);
+    MessageHandler msgHandler = new MessageHandler(this);
+    EventHandler handler = new MsgHandler2PCSlave(this);
+    msgHandler.setTransactionHandler(handler);
+    channel.setMessageEventHandler(msgHandler);
 
     channel.startPolling();
     channel.close();

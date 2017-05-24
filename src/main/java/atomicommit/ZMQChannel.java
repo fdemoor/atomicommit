@@ -30,11 +30,27 @@ class ZMQChannel implements PerfectPointToPointLinks {
     reactor = new ZLoop();
   }
 
-  private class ZMQEventhandler implements ZLoop.IZLoopHandler {
+  private class ZMQTimerHandler implements ZLoop.IZLoopHandler {
 
     private final EventHandler handler;
 
-    ZMQEventhandler(EventHandler h) {
+    ZMQTimerHandler(EventHandler h) {
+      handler = h;
+    }
+
+    @Override
+    public int handle(ZLoop loop, PollItem item, Object arg_) {
+      handler.handle(arg_);
+      return 0;
+    }
+
+  }
+
+  private class ZMQMessageHandler implements ZLoop.IZLoopHandler {
+
+    private final MessageHandler handler;
+
+    ZMQMessageHandler(MessageHandler h) {
       handler = h;
     }
 
@@ -88,14 +104,14 @@ class ZMQChannel implements PerfectPointToPointLinks {
     return message;
   }
 
-  public void setMessageEventHandler(EventHandler handler) {
-    ZMQEventhandler h = new ZMQEventhandler(handler);
+  public void setMessageEventHandler(MessageHandler handler) {
+    ZMQMessageHandler h = new ZMQMessageHandler(handler);
     PollItem item = new PollItem(in, ZMQ.Poller.POLLIN);
     reactor.addPoller(item, h, null);
   }
 
   public void setTimeoutEventHandler(EventHandler handler, int delay, int times) {
-    ZMQEventhandler h = new ZMQEventhandler(handler);
+    ZMQTimerHandler h = new ZMQTimerHandler(handler);
     reactor.addTimer(delay, times, h, null);
   }
 

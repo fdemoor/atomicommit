@@ -14,9 +14,8 @@ public interface PerfectPointToPointLinks {
   /**  Retrieve an incoming message */
   Message deliver();
 
-  /** Set the handler called when a message is received
-    * The handler has to call method deliver() to actually get the message */
-  void setMessageEventHandler(EventHandler handler);
+  /** Set the handler called when a message is received */
+  void setMessageEventHandler(MessageHandler handler);
 
   /** Set the handler called when a timeout is received */
   void setTimeoutEventHandler(EventHandler handler, int delay, int times);
