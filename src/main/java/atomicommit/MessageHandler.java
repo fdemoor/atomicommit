@@ -13,6 +13,9 @@ public class MessageHandler {
 
   MessageHandler(Node n) {
     node = n;
+    if (n instanceof StorageNode) {
+      startTransaction = new MsgHandlerStartTR((StorageNode) n);
+    }
   }
 
   void setTransactionHandler(EventHandler handler) {

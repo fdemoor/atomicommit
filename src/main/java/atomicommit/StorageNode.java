@@ -3,12 +3,15 @@ package atomicommit;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.HashMap;
+
 import org.zeromq.ZThread;
 
 public class StorageNode extends Node implements ZThread.IDetachedRunnable {
 
   private final NodeID myID;
   private final NodeID trManager;
+  private HashMap<Integer, Transaction> transactions;
   private final NodeIDWrapper nodesWrapper;
   private PerfectPointToPointLinks channel;
   private final Logger logger = LogManager.getLogger();
@@ -18,6 +21,7 @@ public class StorageNode extends Node implements ZThread.IDetachedRunnable {
     nodesWrapper = new NodeIDWrapper(id);
     myID = nodesWrapper.getNodeID(id);
     trManager = nodesWrapper.getNodeID(manager);
+    transactions = new HashMap<Integer, Transaction>();
 
     channel = new ZMQChannel(nodesWrapper);
     channel.setIn(myID);
@@ -25,11 +29,19 @@ public class StorageNode extends Node implements ZThread.IDetachedRunnable {
 
   }
 
+  void startTransaction(int trID) {
+    logger.debug("Storage Node #{} starts transaction #{}", myID, trID);
+    Transaction tr = new Transaction(trID);
+    transactions.put(trID, tr);
+  }
+
   void commitTransaction(int trID) {
+    transactions.get(trID).commit();
     logger.debug("Storage Node #{} commits transaction #{}", myID, trID);
   }
 
   void abortTransaction(int trID) {
+    transactions.get(trID).abort();
     logger.debug("Storage Node #{} aborts transaction #{}", myID, trID);
   }
 

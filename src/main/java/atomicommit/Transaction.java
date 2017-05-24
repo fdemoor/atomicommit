@@ -19,11 +19,11 @@ public class Transaction {
   }
 
   void commit() {
-    logger.debug("Transaction #{} commited", myID);
+
   }
 
   void abort() {
-    logger.debug("Transaction #{} aborted", myID);
+    
   }
 
 }

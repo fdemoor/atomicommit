@@ -85,6 +85,7 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
     int trID = transactionIDs.get();
     transactionIDs.incr();
     Transaction tr = new Transaction(trID);
+    sendToAllStorageNodes(trID, MessageType.TR_START);
     logger.debug("Transaction Manager #{} starts transaction #{}", myID, trID);
     transactions.put(trID, new TransactionWrapper(tr, storageNodes.size()));
     return trID;
@@ -96,11 +97,13 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
   }
 
   void commitTransaction(int trID) {
+    logger.debug("Transaction Manager #{} commits transaction #{}", myID, trID);
     Transaction tr = transactions.get(trID).transaction;
     tr.commit();
   }
 
   void abortTransaction(int trID) {
+    logger.debug("Transaction Manager #{} aborts transaction #{}", myID, trID);
     Transaction tr = transactions.get(trID).transaction;
     tr.abort();
   }
