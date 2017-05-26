@@ -1,4 +1,6 @@
-package atomicommit;
+package atomicommit.util.msg;
+
+import atomicommit.util.node.NodeID;
 
 public class Message {
 
@@ -6,21 +8,21 @@ public class Message {
   private final int id;
   private final MessageType type;
 
-  Message(NodeID srcID, int msgID, MessageType msgType) {
+  public Message(NodeID srcID, int msgID, MessageType msgType) {
     src = srcID;
     id = msgID;
     type = msgType;
   }
 
-  NodeID getSrc() {
+  public NodeID getSrc() {
     return src;
   }
 
-  int getID() {
+  public int getID() {
     return id;
   }
 
-  MessageType getType() {
+  public MessageType getType() {
     return type;
   }
 }

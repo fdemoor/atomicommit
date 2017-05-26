@@ -1,4 +1,17 @@
-package atomicommit;
+package atomicommit.node;
+
+import atomicommit.events.EventHandler;
+import atomicommit.events.MessageHandler;
+import atomicommit.events.MsgHandler0NBACMaster;
+import atomicommit.events.RunTransaction;
+import atomicommit.util.misc.Counter;
+import atomicommit.util.node.NodeID;
+import atomicommit.util.node.NodeIDWrapper;
+import atomicommit.util.msg.MessageType;
+import atomicommit.util.msg.Message;
+import atomicommit.transaction.Transaction;
+import atomicommit.channels.PerfectPointToPointLinks;
+import atomicommit.channels.ZMQChannel;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -91,7 +104,7 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
 
   }
 
-  int startTransaction() {
+  public int startTransaction() {
     int trID = transactionIDs.get();
     transactionIDs.incr();
     Transaction tr = new Transaction(trID);
@@ -101,12 +114,12 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
     return trID;
   }
 
-  void tryCommit(int trID) {
+  public void tryCommit(int trID) {
     logger.debug("Transaction Manager #{} tries to commit transaction #{}", myID, trID);
     sendToAllStorageNodes(trID, MessageType.TR_XACT);
   }
 
-  void commitTransaction(int trID) {
+  public void commitTransaction(int trID) {
     if (!transactions.get(trID).isDone()) {
       transactions.get(trID).setDone();
       logger.debug("Transaction Manager #{} commits transaction #{}", myID, trID);
@@ -115,7 +128,7 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
     }
   }
 
-  void abortTransaction(int trID) {
+  public void abortTransaction(int trID) {
     if (!transactions.get(trID).isDone()) {
       transactions.get(trID).setDone();
       logger.debug("Transaction Manager #{} aborts transaction #{}", myID, trID);
@@ -124,15 +137,15 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
     }
   }
 
-  boolean setTransactionVote(int trID, NodeID id, boolean vote) {
+  public boolean setTransactionVote(int trID, NodeID id, boolean vote) {
     return transactions.get(trID).setVote(id, vote);
   }
 
-  boolean getTransactionDecision(int trID) {
+  public boolean getTransactionDecision(int trID) {
     return transactions.get(trID).getDecision();
   }
 
-  void sendToAllStorageNodes(int id, MessageType type) {
+  public void sendToAllStorageNodes(int id, MessageType type) {
     Message message = new Message(myID, id, type);
     Iterator<Integer> it = storageNodes.iterator();
     while (it.hasNext()) {
@@ -140,7 +153,7 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
     }
   }
 
-  Message deliverMessage() {
+  public Message deliverMessage() {
     return channel.deliver();
   }
 

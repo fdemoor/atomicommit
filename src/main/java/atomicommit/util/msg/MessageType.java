@@ -1,4 +1,4 @@
-package atomicommit;
+package atomicommit.util.msg;
 
 public enum MessageType {
 

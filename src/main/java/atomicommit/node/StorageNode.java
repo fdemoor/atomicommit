@@ -1,4 +1,17 @@
-package atomicommit;
+package atomicommit.node;
+
+import atomicommit.events.EventHandler;
+import atomicommit.events.MessageHandler;
+import atomicommit.events.MsgHandler0NBACSlave;
+import atomicommit.events.TRProtocolInfo;
+import atomicommit.events.TR0NBACInfo;
+import atomicommit.util.msg.MessageType;
+import atomicommit.util.msg.Message;
+import atomicommit.util.node.NodeID;
+import atomicommit.util.node.NodeIDWrapper;
+import atomicommit.channels.PerfectPointToPointLinks;
+import atomicommit.channels.ZMQChannel;
+import atomicommit.transaction.Transaction;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -53,44 +66,44 @@ public class StorageNode extends Node implements ZThread.IDetachedRunnable {
 
   }
 
-  void setTimeoutEvent(EventHandler handler, int delay, int times, Object arg_) {
+  public void setTimeoutEvent(EventHandler handler, int delay, int times, Object arg_) {
     channel.setTimeoutEventHandler(handler, delay, times, arg_);
   }
 
-  void startTransaction(int trID) {
+  public void startTransaction(int trID) {
     logger.debug("Storage Node #{} starts transaction #{}", myID, trID);
     Transaction tr = new Transaction(trID);
     TRProtocolInfo info = new TR0NBACInfo();
     transactions.put(trID, new TransactionWrapper(tr, info, nodes.size() -1));
   }
 
-  TRProtocolInfo getTransactionInfo(int trID) {
+  public TRProtocolInfo getTransactionInfo(int trID) {
     return transactions.get(trID).info;
   }
 
-  void commitTransaction(int trID) {
+  public void commitTransaction(int trID) {
     transactions.get(trID).transaction.commit();
     logger.debug("Storage Node #{} commits transaction #{}", myID, trID);
   }
 
-  void abortTransaction(int trID) {
+  public void abortTransaction(int trID) {
     transactions.get(trID).transaction.abort();
     logger.debug("Storage Node #{} aborts transaction #{}", myID, trID);
   }
 
-  void sendToManager(int id, MessageType type) {
+  public void sendToManager(int id, MessageType type) {
     Message message = new Message(myID, id, type);
     channel.send(trManager, message);
   }
 
-  void sendToNode(int id, MessageType type, NodeID dest) {
+  public void sendToNode(int id, MessageType type, NodeID dest) {
     if (!dest.equals(myID)) {
       Message message = new Message(myID, id, type);
       channel.send(dest, message);
     }
   }
 
-  void sendToAllStorageNodes(int id, MessageType type) {
+  public void sendToAllStorageNodes(int id, MessageType type) {
     Message message = new Message(myID, id, type);
     Iterator<Integer> it = nodes.iterator();
     while (it.hasNext()) {
@@ -101,15 +114,15 @@ public class StorageNode extends Node implements ZThread.IDetachedRunnable {
     }
   }
 
-  Message deliverMessage() {
+  public Message deliverMessage() {
     return channel.deliver();
   }
 
-  int getTransanctionNbNodes(int trID) {
+  public int getTransanctionNbNodes(int trID) {
     return transactions.get(trID).nbInvolvedNodes;
   }
 
-  boolean checkManager(NodeID id) {
+  public boolean checkManager(NodeID id) {
     boolean test = trManager.equals(id);
     if (!test) {
       logger.warn("Storage Node #{} - Message not coming from manager #{} but from #{}", trManager, id);

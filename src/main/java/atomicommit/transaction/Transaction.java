@@ -1,4 +1,4 @@
-package atomicommit;
+package atomicommit.transaction;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -10,20 +10,20 @@ public class Transaction {
   private final int myID;
   private final Logger logger = LogManager.getLogger();
 
-  Transaction(int n) {
+  public Transaction(int n) {
     myID = n;
   }
 
-  int getID() {
+  public int getID() {
     return myID;
   }
 
-  void commit() {
+  public void commit() {
 
   }
 
-  void abort() {
-    
+  public void abort() {
+
   }
 
 }

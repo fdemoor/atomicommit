@@ -1,4 +1,9 @@
-package atomicommit;
+package atomicommit.events;
+
+import atomicommit.node.StorageNode;
+import atomicommit.util.msg.Message;
+import atomicommit.util.msg.MessageType;
+import atomicommit.util.node.NodeID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -10,7 +15,7 @@ public class MsgHandler2PCSlave implements EventHandler {
   private final StorageNode node;
   private final Logger logger = LogManager.getLogger();
 
-  MsgHandler2PCSlave(StorageNode n) {
+  public MsgHandler2PCSlave(StorageNode n) {
     node = n;
   }
 

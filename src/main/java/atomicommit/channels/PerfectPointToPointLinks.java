@@ -1,4 +1,9 @@
-package atomicommit;
+package atomicommit.channels;
+
+import atomicommit.util.msg.Message;
+import atomicommit.events.EventHandler;
+import atomicommit.events.MessageHandler;
+import atomicommit.util.node.NodeID;
 
 public interface PerfectPointToPointLinks {
 

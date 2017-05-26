@@ -1,4 +1,4 @@
-package atomicommit;
+package atomicommit.events;
 
 public interface TRProtocolInfo {
 

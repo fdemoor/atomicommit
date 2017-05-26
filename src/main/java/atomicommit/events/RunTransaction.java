@@ -1,10 +1,12 @@
-package atomicommit;
+package atomicommit.events;
+
+import atomicommit.node.TransactionManager;
 
 public class RunTransaction implements EventHandler {
 
   private final TransactionManager trMng;
 
-  RunTransaction(TransactionManager manager) {
+  public RunTransaction(TransactionManager manager) {
     trMng = manager;
   }
 

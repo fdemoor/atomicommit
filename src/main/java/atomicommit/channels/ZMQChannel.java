@@ -1,4 +1,11 @@
-package atomicommit;
+package atomicommit.channels;
+
+import atomicommit.events.EventHandler;
+import atomicommit.events.MessageHandler;
+import atomicommit.util.node.NodeID;
+import atomicommit.util.node.NodeIDWrapper;
+import atomicommit.util.msg.Message;
+import atomicommit.util.msg.MessageType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -13,7 +20,7 @@ import java.util.HashMap;
 import java.util.Collection;
 import java.util.Iterator;
 
-class ZMQChannel implements PerfectPointToPointLinks {
+public class ZMQChannel implements PerfectPointToPointLinks {
 
   private final ZMQ.Context context;
   private ZMQ.Socket in;

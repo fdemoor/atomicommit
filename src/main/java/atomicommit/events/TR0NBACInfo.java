@@ -1,4 +1,6 @@
-package atomicommit;
+package atomicommit.events;
+
+import atomicommit.util.node.NodeID;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -11,52 +13,52 @@ public class TR0NBACInfo implements TRProtocolInfo {
   private boolean zero;
   private int phase;
 
-  TR0NBACInfo() {
+  public TR0NBACInfo() {
     myAcks = new ArrayList<NodeID>();
     decided = false;
     zero = false;
     phase = 0;
   }
 
-  void incrPhase() {
+  public void incrPhase() {
     phase++;
   }
 
-  int getPhase() {
+  public int getPhase() {
     return phase;
   }
 
-  boolean getZero() {
+  public boolean getZero() {
     return zero;
   }
 
-  void setVote(boolean b) {
+  public void setVote(boolean b) {
     myVote = b;
   }
 
-  boolean getVote() {
+  public boolean getVote() {
     return myVote;
   }
 
-  void setDecided() {
+  public void setDecided() {
     decided = true;
   }
 
-  boolean getDecided() {
+  public boolean getDecided() {
     return decided;
   }
 
-  void addAck(NodeID id) {
+  public void addAck(NodeID id) {
     if (!myAcks.contains(id)) {
       myAcks.add(id);
     }
   }
 
-  void setZero() {
+  public void setZero() {
     zero = true;
   }
 
-  boolean allAcks(int n) {
+  public boolean allAcks(int n) {
     return (myAcks.size() == n);
   }
 

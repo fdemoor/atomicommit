@@ -1,4 +1,9 @@
-package atomicommit;
+package atomicommit.events;
+
+import atomicommit.node.TransactionManager;
+import atomicommit.util.msg.Message;
+import atomicommit.util.msg.MessageType;
+import atomicommit.util.node.NodeID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -8,7 +13,7 @@ public class MsgHandler0NBACMaster implements EventHandler {
   private final TransactionManager trMng;
   private final Logger logger = LogManager.getLogger();
 
-  MsgHandler0NBACMaster(TransactionManager manager) {
+  public MsgHandler0NBACMaster(TransactionManager manager) {
     trMng = manager;
   }
 

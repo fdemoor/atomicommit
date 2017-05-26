@@ -1,4 +1,7 @@
-package atomicommit;
+package atomicommit.node;
+
+import atomicommit.node.TransactionManager;
+import atomicommit.node.StorageNode;
 
 import java.util.ArrayList;
 

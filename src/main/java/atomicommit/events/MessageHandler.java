@@ -1,4 +1,10 @@
-package atomicommit;
+package atomicommit.events;
+
+import atomicommit.events.EventHandler;
+import atomicommit.node.Node;
+import atomicommit.node.StorageNode;
+import atomicommit.util.msg.MessageType;
+import atomicommit.util.msg.Message;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -11,14 +17,14 @@ public class MessageHandler {
   private EventHandler startTransaction;
   private EventHandler transactionHandler;
 
-  MessageHandler(Node n) {
+  public MessageHandler(Node n) {
     node = n;
     if (n instanceof StorageNode) {
       startTransaction = new MsgHandlerStartTR((StorageNode) n);
     }
   }
 
-  void setTransactionHandler(EventHandler handler) {
+  public void setTransactionHandler(EventHandler handler) {
     transactionHandler = handler;
   }
 

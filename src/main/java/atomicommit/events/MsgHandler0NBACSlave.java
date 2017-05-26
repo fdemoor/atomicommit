@@ -1,4 +1,9 @@
-package atomicommit;
+package atomicommit.events;
+
+import atomicommit.node.StorageNode;
+import atomicommit.util.msg.Message;
+import atomicommit.util.msg.MessageType;
+import atomicommit.util.node.NodeID;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -67,7 +72,7 @@ public class MsgHandler0NBACSlave implements EventHandler {
 
   }
 
-  MsgHandler0NBACSlave(StorageNode n) {
+  public MsgHandler0NBACSlave(StorageNode n) {
     node = n;
     timerHandler = new timerHandler0NBAC();
   }
