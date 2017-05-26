@@ -10,7 +10,9 @@ public class Main {
     ArrayList<Integer> storageIDs = new ArrayList<Integer>();
     for (int i = 1; i < 4; i++) {
       storageIDs.add(i);
-      ZThread.start(new StorageNode(i, managerID));
+    }
+    for (int i = 1; i < 4; i++) {
+      ZThread.start(new StorageNode(i, managerID, storageIDs));
     }
 
     ZThread.start(new TransactionManager(managerID, storageIDs));

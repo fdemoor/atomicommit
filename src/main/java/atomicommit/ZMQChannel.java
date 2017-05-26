@@ -110,9 +110,9 @@ class ZMQChannel implements PerfectPointToPointLinks {
     reactor.addPoller(item, h, null);
   }
 
-  public void setTimeoutEventHandler(EventHandler handler, int delay, int times) {
+  public void setTimeoutEventHandler(EventHandler handler, int delay, int times, Object arg_) {
     ZMQTimerHandler h = new ZMQTimerHandler(handler);
-    reactor.addTimer(delay, times, h, null);
+    reactor.addTimer(delay, times, h, arg_);
   }
 
   public void startPolling() {

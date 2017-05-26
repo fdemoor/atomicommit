@@ -22,5 +22,42 @@ public class TR0NBACInfo implements TRProtocolInfo {
     phase++;
   }
 
+  int getPhase() {
+    return phase;
+  }
+
+  boolean getZero() {
+    return zero;
+  }
+
+  void setVote(boolean b) {
+    myVote = b;
+  }
+
+  boolean getVote() {
+    return myVote;
+  }
+
+  void setDecided() {
+    decided = true;
+  }
+
+  boolean getDecided() {
+    return decided;
+  }
+
+  void addAck(NodeID id) {
+    if (!myAcks.contains(id)) {
+      myAcks.add(id);
+    }
+  }
+
+  void setZero() {
+    zero = true;
+  }
+
+  boolean allAcks(int n) {
+    return (myAcks.size() == n);
+  }
 
 }

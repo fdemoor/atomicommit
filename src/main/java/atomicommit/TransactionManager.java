@@ -27,6 +27,7 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
     private final ArrayList<NodeID> hasProposed;
     private boolean decision;
     private boolean hasDecided;
+    private boolean done;
 
     TransactionWrapper(Transaction tr, int n) {
       transaction = tr;
@@ -34,6 +35,7 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
       hasProposed = new ArrayList();
       hasDecided = false;
       decision = true;
+      done = false;
     }
 
     boolean setVote(NodeID id, boolean vote) {
@@ -58,6 +60,14 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
         logger.warn("Trying to obtain decision value from transaction #{} while not yet determined", myID);
         return false;
       }
+    }
+
+    void setDone() {
+      done = true;
+    }
+
+    boolean isDone() {
+      return done;
     }
 
   }
@@ -97,15 +107,21 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
   }
 
   void commitTransaction(int trID) {
-    logger.debug("Transaction Manager #{} commits transaction #{}", myID, trID);
-    Transaction tr = transactions.get(trID).transaction;
-    tr.commit();
+    if (!transactions.get(trID).isDone()) {
+      transactions.get(trID).setDone();
+      logger.debug("Transaction Manager #{} commits transaction #{}", myID, trID);
+      Transaction tr = transactions.get(trID).transaction;
+      tr.commit();
+    }
   }
 
   void abortTransaction(int trID) {
-    logger.debug("Transaction Manager #{} aborts transaction #{}", myID, trID);
-    Transaction tr = transactions.get(trID).transaction;
-    tr.abort();
+    if (!transactions.get(trID).isDone()) {
+      transactions.get(trID).setDone();
+      logger.debug("Transaction Manager #{} aborts transaction #{}", myID, trID);
+      Transaction tr = transactions.get(trID).transaction;
+      tr.abort();
+    }
   }
 
   boolean setTransactionVote(int trID, NodeID id, boolean vote) {
@@ -132,13 +148,14 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
   public void run(Object[] args) {
 
     MessageHandler msgHandler = new MessageHandler(this);
-    EventHandler handler = new MsgHandler2PCMaster(this);
+    //EventHandler handler = new MsgHandler2PCMaster(this);
+    EventHandler handler = new MsgHandler0NBACMaster(this);
     msgHandler.setTransactionHandler(handler);
     channel.setMessageEventHandler(msgHandler);
 
 
     EventHandler handlerTimer = new RunTransaction(this);
-    channel.setTimeoutEventHandler(handlerTimer, 1, 3);
+    channel.setTimeoutEventHandler(handlerTimer, 1, 1, null);
 
     channel.startPolling();
     channel.close();
