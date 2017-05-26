@@ -24,3 +24,10 @@ libraryDependencies ++= Seq(
    "org.apache.logging.log4j" % "log4j-api" % "2.8.2",
    "org.apache.logging.log4j" % "log4j-core" % "2.8.2"
 )
+
+//javacOptions in (Compile,doc) ++= Seq("-doclet", "info.leadinglight.umljavadoclet.UmlJavaDoclet", "-docletpath", "src/main/resources/uml-java-doclet-1.0-SNAPSHOT.jar")
+javacOptions in (Compile,doc) ++= Seq(
+  "-doclet", "nl.talsmasoftware.umldoclet.UMLDoclet",
+  "-docletpath", "lib/umldoclet-1.0.9.jar",
+  "-umlIncludePrivateFields", "true"
+)
