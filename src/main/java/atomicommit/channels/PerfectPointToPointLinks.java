@@ -25,6 +25,9 @@ public interface PerfectPointToPointLinks {
   /** Set the handler called when a timeout is received */
   void setTimeoutEventHandler(EventHandler handler, int delay, int times, Object arg_);
 
+  /** Remove timeout event */
+  void removeTimeoutEvent();
+
   /** Start the message or timer polling */
   void startPolling();
 

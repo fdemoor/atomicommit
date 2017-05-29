@@ -2,6 +2,7 @@ package atomicommit.node;
 
 import atomicommit.events.EventHandler;
 import atomicommit.events.MessageHandler;
+import atomicommit.events.MsgHandler2PCMaster;
 import atomicommit.events.MsgHandler0NBACMaster;
 import atomicommit.events.RunTransaction;
 import atomicommit.util.misc.Counter;
@@ -27,11 +28,10 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
 
   private final List<Integer> storageNodes;
   private final HashMap<Integer, TransactionWrapper> transactions;
-  private final NodeID myID;
   private final NodeIDWrapper nodesWrapper;
   private final PerfectPointToPointLinks channel;
-  private final Logger logger = LogManager.getLogger();
   private final Counter transactionIDs;
+  private final Logger logger = LogManager.getLogger();
 
   private class TransactionWrapper {
 
@@ -85,9 +85,10 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
 
   }
 
-  TransactionManager(int id, List<Integer> servers) {
+  TransactionManager(NodeConfig conf, int id, List<Integer> servers, NodeIDWrapper wrapper) {
 
-    nodesWrapper = new NodeIDWrapper(id);
+    config = conf;
+    nodesWrapper = wrapper;
     storageNodes = servers;
     myID = nodesWrapper.getNodeID(id);
     transactionIDs = new Counter();
@@ -101,6 +102,16 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
       NodeID idNode = nodesWrapper.getNodeID(it.next());
       channel.addOut(idNode);
     }
+    MessageHandler msgHandler = new MessageHandler(this);
+    switch (config.getTrProtocol()) {
+      case TWO_PHASE_COMMIT:
+        msgHandler.setTransactionHandler(new MsgHandler2PCMaster(this));
+        break;
+      case ZERO_NBAC:
+        msgHandler.setTransactionHandler(new MsgHandler0NBACMaster(this));
+        break;
+    }
+    channel.setMessageEventHandler(msgHandler);
 
   }
 
@@ -159,14 +170,6 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
 
   @Override
   public void run(Object[] args) {
-
-    MessageHandler msgHandler = new MessageHandler(this);
-    //EventHandler handler = new MsgHandler2PCMaster(this);
-    EventHandler handler = new MsgHandler0NBACMaster(this);
-    msgHandler.setTransactionHandler(handler);
-    channel.setMessageEventHandler(msgHandler);
-
-
     EventHandler handlerTimer = new RunTransaction(this);
     channel.setTimeoutEventHandler(handlerTimer, 1, 1, null);
 

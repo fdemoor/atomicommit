@@ -76,6 +76,9 @@ public class ZMQChannel implements PerfectPointToPointLinks {
     owner = id;
     in = context.socket(ZMQ.DEALER);
     in.bind(id.getIP());
+    ZMQ.Socket skt = context.socket(ZMQ.DEALER);
+    skt.connect(id.getIP());
+    out.put(id, skt);
   }
 
   public void addOut(NodeID id) {
@@ -96,8 +99,11 @@ public class ZMQChannel implements PerfectPointToPointLinks {
       msg.add("" + message.getSrc().getID());
       msg.add("" + message.getID());
       msg.add(message.getType().name());
+      if (message.getKey() != null) {
+        msg.add("" + message.getKey());
+      }
       msg.send(skt);
-      logger.debug("Node #{} sent [{}, {}] to node #{}", message.getSrc(), message.getID(), message.getType(), dest);
+      logger.debug("Node #{} sent [{}, {}, {}] to node #{}", message.getSrc(), message.getID(), message.getType(), message.getKey(), dest);
     }
   }
 
@@ -106,8 +112,14 @@ public class ZMQChannel implements PerfectPointToPointLinks {
     NodeID src = nodesWrapper.getNodeID(Integer.parseInt(msg.popString()));
     int id = Integer.parseInt(msg.popString());
     MessageType type = MessageType.valueOf(msg.popString());
-    Message message = new Message(src, id, type);
-    logger.debug("Node #{} received [{}, {}] from node #{}", owner, message.getID(), message.getType(), message.getSrc());
+    String key = msg.popString();
+    Message message = null;
+    if (key != null) {
+      message = new Message(src, id, type, Integer.parseInt(key));
+    } else {
+      message = new Message(src, id, type);
+    }
+    logger.debug("Node #{} received [{}, {}, {}] from node #{}", owner, message.getID(), message.getType(), message.getKey(), message.getSrc());
     return message;
   }
 
@@ -120,6 +132,10 @@ public class ZMQChannel implements PerfectPointToPointLinks {
   public void setTimeoutEventHandler(EventHandler handler, int delay, int times, Object arg_) {
     ZMQTimerHandler h = new ZMQTimerHandler(handler);
     reactor.addTimer(delay, times, h, arg_);
+  }
+
+  public void removeTimeoutEvent() {
+    reactor.removeTimer(null);
   }
 
   public void startPolling() {

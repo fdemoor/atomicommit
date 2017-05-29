@@ -5,7 +5,7 @@ import atomicommit.util.node.NodeID;
 import java.util.List;
 import java.util.ArrayList;
 
-public class TR0NBACInfo implements TRProtocolInfo {
+public class TR0NBACInfo implements ProtocolInfo {
 
   private boolean myVote;
   private final List<NodeID> myAcks;

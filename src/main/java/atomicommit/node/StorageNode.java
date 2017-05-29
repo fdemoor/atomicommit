@@ -2,9 +2,12 @@ package atomicommit.node;
 
 import atomicommit.events.EventHandler;
 import atomicommit.events.MessageHandler;
+import atomicommit.events.MsgHandler2PCSlave;
 import atomicommit.events.MsgHandler0NBACSlave;
-import atomicommit.events.TRProtocolInfo;
+import atomicommit.events.RaftLeaderElection;
+import atomicommit.events.ProtocolInfo;
 import atomicommit.events.TR0NBACInfo;
+import atomicommit.events.Consensus;
 import atomicommit.util.msg.MessageType;
 import atomicommit.util.msg.Message;
 import atomicommit.util.node.NodeID;
@@ -24,7 +27,6 @@ import org.zeromq.ZThread;
 
 public class StorageNode extends Node implements ZThread.IDetachedRunnable {
 
-  private final NodeID myID;
   private final NodeID trManager;
   private final List<Integer> nodes;
   private final HashMap<Integer, TransactionWrapper> transactions;
@@ -32,9 +34,10 @@ public class StorageNode extends Node implements ZThread.IDetachedRunnable {
   private final PerfectPointToPointLinks channel;
   private final Logger logger = LogManager.getLogger();
 
-  StorageNode(int id, int manager, List<Integer> nodesList) {
+  StorageNode(NodeConfig conf, int id, int manager, List<Integer> nodesList, NodeIDWrapper wrapper) {
 
-    nodesWrapper = new NodeIDWrapper(id);
+    config = conf;
+    nodesWrapper = wrapper;
     myID = nodesWrapper.getNodeID(id);
     nodes = nodesList;
     trManager = nodesWrapper.getNodeID(manager);
@@ -50,18 +53,32 @@ public class StorageNode extends Node implements ZThread.IDetachedRunnable {
         channel.addOut(nodeID);
       }
     }
+    MessageHandler msgHandler = new MessageHandler(this);
+    switch (config.getTrProtocol()) {
+      case TWO_PHASE_COMMIT:
+        msgHandler.setTransactionHandler(new MsgHandler2PCSlave(this));
+        break;
+      case ZERO_NBAC:
+        msgHandler.setTransactionHandler(new MsgHandler0NBACSlave(this));
+        break;
+    }
+    msgHandler.setConsensusHandler(new RaftLeaderElection(this));
+    channel.setMessageEventHandler(msgHandler);
+
   }
 
   private class TransactionWrapper {
 
     private final Transaction transaction;
-    private final TRProtocolInfo info;
+    private final ProtocolInfo info;
     private final int nbInvolvedNodes;
+    private ProtocolInfo consInfo;
 
-    TransactionWrapper(Transaction tr, TRProtocolInfo prt, int n) {
+    TransactionWrapper(Transaction tr, ProtocolInfo prt, int n) {
       transaction = tr;
       info = prt;
       nbInvolvedNodes = n;
+      consInfo = null;
     }
 
   }
@@ -70,15 +87,33 @@ public class StorageNode extends Node implements ZThread.IDetachedRunnable {
     channel.setTimeoutEventHandler(handler, delay, times, arg_);
   }
 
+  public void removeTimeoutEvent() {
+    channel.removeTimeoutEvent();
+  }
+  
   public void startTransaction(int trID) {
     logger.debug("Storage Node #{} starts transaction #{}", myID, trID);
     Transaction tr = new Transaction(trID);
-    TRProtocolInfo info = new TR0NBACInfo();
+    ProtocolInfo info = null;
+    switch (config.getTrProtocol()) {
+      case ZERO_NBAC:
+        info = new TR0NBACInfo();
+        break;
+    }
     transactions.put(trID, new TransactionWrapper(tr, info, nodes.size() -1));
   }
 
-  public TRProtocolInfo getTransactionInfo(int trID) {
+  public ProtocolInfo getTransactionInfo(int trID) {
     return transactions.get(trID).info;
+  }
+
+  public ProtocolInfo getConsensusInfo(int trID) {
+    ProtocolInfo info = transactions.get(trID).consInfo;
+    if (info == null) {
+      info = new Consensus();
+      transactions.get(trID).consInfo = info;
+    }
+    return info;
   }
 
   public void commitTransaction(int trID) {
@@ -97,14 +132,23 @@ public class StorageNode extends Node implements ZThread.IDetachedRunnable {
   }
 
   public void sendToNode(int id, MessageType type, NodeID dest) {
-    if (!dest.equals(myID)) {
-      Message message = new Message(myID, id, type);
-      channel.send(dest, message);
-    }
+    Message message = new Message(myID, id, type);
+    channel.send(dest, message);
   }
 
   public void sendToAllStorageNodes(int id, MessageType type) {
     Message message = new Message(myID, id, type);
+    Iterator<Integer> it = nodes.iterator();
+    while (it.hasNext()) {
+      NodeID nodeID = nodesWrapper.getNodeID(it.next());
+      if (!nodeID.equals(myID)) {
+        channel.send(nodeID, message);
+      }
+    }
+  }
+
+  public void sendToAllStorageNodes(int id, MessageType type, int k) {
+    Message message = new Message(myID, id, type, k);
     Iterator<Integer> it = nodes.iterator();
     while (it.hasNext()) {
       NodeID nodeID = nodesWrapper.getNodeID(it.next());
@@ -125,20 +169,13 @@ public class StorageNode extends Node implements ZThread.IDetachedRunnable {
   public boolean checkManager(NodeID id) {
     boolean test = trManager.equals(id);
     if (!test) {
-      logger.warn("Storage Node #{} - Message not coming from manager #{} but from #{}", trManager, id);
+      logger.warn("Storage Node #{} - Message not coming from manager #{} but from #{}", myID, trManager, id);
     }
     return test;
   }
 
   @Override
   public void run(Object[] args) {
-
-    MessageHandler msgHandler = new MessageHandler(this);
-    //EventHandler handler = new MsgHandler2PCSlave(this);
-    EventHandler handler = new MsgHandler0NBACSlave(this);
-    msgHandler.setTransactionHandler(handler);
-    channel.setMessageEventHandler(msgHandler);
-
     channel.startPolling();
     channel.close();
   }

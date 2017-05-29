@@ -19,8 +19,9 @@ This project is under the GNU General Public License v3.0 - see the [LICENSE](LI
 
 ## TODO
 
-- [ ] Better organization (sub-packages?)
-- [ ] Parameters for proper configuration
+- [x] Better organization (sub-packages?)
+- [x] Parameters for proper configuration
 - [ ] Indulgent Consensus implementation (Raft leader election?)
 - [ ] 0NBAC Protocol
 - [ ] NBAC Protocol
+- [ ] Documentation and comments

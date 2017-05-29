@@ -1,5 +1,6 @@
 package atomicommit.events;
 
+import atomicommit.events.Consensus;
 import atomicommit.node.StorageNode;
 import atomicommit.util.msg.Message;
 import atomicommit.util.msg.MessageType;
@@ -13,14 +14,13 @@ import java.util.HashMap;
 
 public class MsgHandler0NBACSlave implements EventHandler {
 
-  private int DELAY = 1000;
-
+  private int delay;
   private final StorageNode node;
-  private final Logger logger = LogManager.getLogger();
   private final EventHandler timerHandler;
+  private final Logger logger = LogManager.getLogger();
 
   private TR0NBACInfo getInfo(int trID) {
-    TRProtocolInfo info = node.getTransactionInfo(trID);
+    ProtocolInfo info = node.getTransactionInfo(trID);
     if (info instanceof TR0NBACInfo) {
       return (TR0NBACInfo) info;
     } else {
@@ -29,17 +29,27 @@ public class MsgHandler0NBACSlave implements EventHandler {
     }
   }
 
-  private class timerHandler0NBAC implements EventHandler {
-
-    private void decide(int trID, boolean b) {
-      if (b) {
-        node.sendToManager(trID, MessageType.TR_COMMIT);
-        node.commitTransaction(trID);
-      } else {
-        node.sendToManager(trID, MessageType.TR_ABORT);
-        node.abortTransaction(trID);
-      }
+  private Consensus getCons(int trID) {
+    ProtocolInfo info = node.getConsensusInfo(trID);
+    if (info instanceof Consensus) {
+      return (Consensus) info;
+    } else {
+      logger.error("Consensus expected");
+      return null;
     }
+  }
+
+  private void decide(int trID, boolean b) {
+    if (b) {
+      node.sendToManager(trID, MessageType.TR_COMMIT);
+      node.commitTransaction(trID);
+    } else {
+      node.sendToManager(trID, MessageType.TR_ABORT);
+      node.abortTransaction(trID);
+    }
+  }
+
+  private class TimerHandler0NBAC implements EventHandler {
 
     public void handle(Object arg_) {
       int trID = (int) arg_;
@@ -53,19 +63,19 @@ public class MsgHandler0NBACSlave implements EventHandler {
           decide(trID, true);
         } else if (info.getZero() && info.getVote()) {
           node.sendToAllStorageNodes(trID, MessageType.TR_NO);
-          node.setTimeoutEvent(this, DELAY * 2, 1, (Object) trID);
+          node.setTimeoutEvent(this, delay * 2, 1, (Object) trID);
         } else {
-          node.setTimeoutEvent(this, DELAY, 1, (Object) trID);
+          node.setTimeoutEvent(this, delay, 1, (Object) trID);
         }
 
       } else if (phase == 2) {
+        Consensus cons = getCons(trID);
         if (info.allAcks(node.getTransanctionNbNodes(trID))) {
-          // FIXME: Propose 1 to Consensus
-          decide(trID, false);
+          cons.setVote(true);
         } else {
-          // FIXME: Propose 0 to Consensus
-          decide(trID, false);
+          cons.setVote(false);
         }
+        node.sendToNode(trID, MessageType.CONS_START, node.getID());
       }
 
     }
@@ -74,7 +84,8 @@ public class MsgHandler0NBACSlave implements EventHandler {
 
   public MsgHandler0NBACSlave(StorageNode n) {
     node = n;
-    timerHandler = new timerHandler0NBAC();
+    timerHandler = new TimerHandler0NBAC();
+    delay = node.getConfig().getMsgDelay();
   }
 
   private void handleXACT(int trID) {
@@ -99,7 +110,7 @@ public class MsgHandler0NBACSlave implements EventHandler {
         break;
     }
     info.incrPhase();
-    node.setTimeoutEvent(timerHandler, DELAY, 1, (Object) trID);
+    node.setTimeoutEvent(timerHandler, delay, 1, (Object) trID);
 
   }
 
@@ -124,6 +135,14 @@ public class MsgHandler0NBACSlave implements EventHandler {
     info.addAck(src);
   }
 
+  private void handleCONS(int trID, boolean vote) {
+    TR0NBACInfo info = getInfo(trID);
+    if (!info.getDecided()) {
+      info.setDecided();
+      decide(trID, vote);
+    }
+  }
+
   public void handle(Object arg_) {
     Message message = (Message) arg_;
     int trID = message.getID();
@@ -140,6 +159,12 @@ public class MsgHandler0NBACSlave implements EventHandler {
         break;
       case TR_ABORT:
         handleACK(trID, src);
+        break;
+      case TR_CONS_COMMIT:
+        handleCONS(trID, true);
+        break;
+      case TR_CONS_ABORT:
+        handleCONS(trID, false);
         break;
     }
   }

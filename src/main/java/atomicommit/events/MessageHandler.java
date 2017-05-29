@@ -16,6 +16,7 @@ public class MessageHandler {
 
   private EventHandler startTransaction;
   private EventHandler transactionHandler;
+  private EventHandler consensusHandler;
 
   public MessageHandler(Node n) {
     node = n;
@@ -26,6 +27,10 @@ public class MessageHandler {
 
   public void setTransactionHandler(EventHandler handler) {
     transactionHandler = handler;
+  }
+
+  public void setConsensusHandler(EventHandler handler) {
+    consensusHandler = handler;
   }
 
   public void handle(Object arg_) {
@@ -40,6 +45,8 @@ public class MessageHandler {
           transactionHandler.handle((Object) message);
           break;
       }
+    } else if (type.contains("CONS")) {
+      consensusHandler.handle((Object) message);
     }
   }
 

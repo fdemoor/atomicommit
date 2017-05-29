@@ -10,6 +10,17 @@ public enum MessageType {
   TR_NO,
   TR_START,
   TR_ACK,
-  TR_HELP
+  TR_HELP,
+  TR_CONS_COMMIT,
+  TR_CONS_ABORT,
+
+  /* Consensus messages */
+  CONS_START,
+  CONS_XACT,
+  CONS_YES,
+  CONS_NO,
+  CONS_COMMIT,
+  CONS_ABORT,
+  CONS_ACK
 
 }
