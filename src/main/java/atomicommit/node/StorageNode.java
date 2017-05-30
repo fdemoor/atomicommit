@@ -12,7 +12,6 @@ import atomicommit.util.msg.MessageType;
 import atomicommit.util.msg.Message;
 import atomicommit.util.node.NodeID;
 import atomicommit.util.node.NodeIDWrapper;
-import atomicommit.channels.PerfectPointToPointLinks;
 import atomicommit.channels.ZMQChannel;
 import atomicommit.transaction.Transaction;
 
@@ -31,7 +30,6 @@ public class StorageNode extends Node implements ZThread.IDetachedRunnable {
   private final List<Integer> nodes;
   private final HashMap<Integer, TransactionWrapper> transactions;
   private final NodeIDWrapper nodesWrapper;
-  private final PerfectPointToPointLinks channel;
   private final Logger logger = LogManager.getLogger();
 
   StorageNode(NodeConfig conf, int id, int manager, List<Integer> nodesList, NodeIDWrapper wrapper) {
@@ -90,7 +88,7 @@ public class StorageNode extends Node implements ZThread.IDetachedRunnable {
   public void removeTimeoutEvent() {
     channel.removeTimeoutEvent();
   }
-  
+
   public void startTransaction(int trID) {
     logger.debug("Storage Node #{} starts transaction #{}", myID, trID);
     Transaction tr = new Transaction(trID);

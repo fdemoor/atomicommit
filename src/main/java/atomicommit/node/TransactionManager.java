@@ -11,7 +11,6 @@ import atomicommit.util.node.NodeIDWrapper;
 import atomicommit.util.msg.MessageType;
 import atomicommit.util.msg.Message;
 import atomicommit.transaction.Transaction;
-import atomicommit.channels.PerfectPointToPointLinks;
 import atomicommit.channels.ZMQChannel;
 
 import org.apache.logging.log4j.LogManager;
@@ -29,7 +28,6 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
   private final List<Integer> storageNodes;
   private final HashMap<Integer, TransactionWrapper> transactions;
   private final NodeIDWrapper nodesWrapper;
-  private final PerfectPointToPointLinks channel;
   private final Counter transactionIDs;
   private final Logger logger = LogManager.getLogger();
 
