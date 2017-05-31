@@ -15,7 +15,7 @@ public class Main {
     NodeIDWrapper wrapper = new NodeIDWrapper();
     int N = 4;
 
-    NodeConfig config = new NodeConfig(NodeConfig.TrProtocol.ZERO_NBAC);
+    NodeConfig config = new NodeConfig(NodeConfig.TrProtocol.TWO_PHASE_COMMIT, 100, 1000);
 
     int managerID = 0;
     wrapper.add(managerID, "tcp://localhost:" + managerID);
@@ -28,7 +28,9 @@ public class Main {
       ZThread.start(new StorageNode(config, i, managerID, storageIDs, wrapper));
     }
 
-    ZThread.start(new TransactionManager(config, managerID, storageIDs, wrapper));
+    TransactionManager mng = new TransactionManager(config, managerID, storageIDs, wrapper);
+    mng.runTransaction(1, config.getNbTr());
+    ZThread.start(mng);
 
   }
 }

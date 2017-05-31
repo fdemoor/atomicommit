@@ -9,10 +9,12 @@ public class NodeConfig {
 
   private final TrProtocol trProtocol; /* Atomic commit protocol used */
   private final int msgDelay; /* Delay in ms after which a network-failure is considered */
+  private final int nbTr;
 
-  NodeConfig(TrProtocol pr) {
+  NodeConfig(TrProtocol pr, int delay, int tr) {
     trProtocol = pr;
-    msgDelay = 1000;
+    msgDelay = delay;
+    nbTr = tr;
   }
 
   TrProtocol getTrProtocol() {
@@ -21,6 +23,10 @@ public class NodeConfig {
 
   public int getMsgDelay() {
     return msgDelay;
+  }
+
+  int getNbTr() {
+    return nbTr;
   }
 
 }

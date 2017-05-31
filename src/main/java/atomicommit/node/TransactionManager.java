@@ -29,7 +29,12 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
   private final HashMap<Integer, TransactionWrapper> transactions;
   private final NodeIDWrapper nodesWrapper;
   private final Counter transactionIDs;
+
   private final Logger logger = LogManager.getLogger();
+  private int nbTrDone = 0;
+  private int nbTrC = 0;
+  private int nbTrA = 0;
+  private long startTime;
 
   private class TransactionWrapper {
 
@@ -120,6 +125,11 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
     sendToAllStorageNodes(trID, MessageType.TR_START);
     logger.debug("Transaction Manager #{} starts transaction #{}", myID, trID);
     transactions.put(trID, new TransactionWrapper(tr, storageNodes.size()));
+
+    if (nbTrDone == 0) {
+      startTime = System.currentTimeMillis();
+    }
+
     return trID;
   }
 
@@ -134,6 +144,8 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
       logger.debug("Transaction Manager #{} commits transaction #{}", myID, trID);
       Transaction tr = transactions.get(trID).transaction;
       tr.commit();
+      nbTrC++;
+      logTransaction();
     }
   }
 
@@ -143,6 +155,17 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
       logger.debug("Transaction Manager #{} aborts transaction #{}", myID, trID);
       Transaction tr = transactions.get(trID).transaction;
       tr.abort();
+      nbTrA++;
+      logTransaction();
+    }
+  }
+
+  public void logTransaction() {
+    nbTrDone++;
+    if (nbTrDone == config.getNbTr()) {
+      long duration = System.currentTimeMillis() - startTime;
+      logger.info("Took {} ms for {} transactions: {} commited, {} aborted", duration, config.getNbTr(), nbTrC, nbTrA);
+      System.exit(1);
     }
   }
 
@@ -166,11 +189,13 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
     return channel.deliver();
   }
 
+  public void runTransaction(int delay, int times) {
+    EventHandler handlerTimer = new RunTransaction(this);
+    channel.setTimeoutEventHandler(handlerTimer, delay, times, null);
+  }
+
   @Override
   public void run(Object[] args) {
-    EventHandler handlerTimer = new RunTransaction(this);
-    channel.setTimeoutEventHandler(handlerTimer, 1, 1, null);
-
     channel.startPolling();
     channel.close();
   }

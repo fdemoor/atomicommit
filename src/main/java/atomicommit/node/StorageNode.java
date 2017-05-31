@@ -102,6 +102,10 @@ public class StorageNode extends Node implements ZThread.IDetachedRunnable {
   }
 
   public ProtocolInfo getTransactionInfo(int trID) {
+    TransactionWrapper wrapper = transactions.get(trID);
+    if (wrapper == null) {
+      logger.error("No transaction #{} exists", trID);
+    }
     return transactions.get(trID).info;
   }
 
