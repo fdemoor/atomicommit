@@ -91,25 +91,12 @@ public class MsgHandler0NBACSlave implements EventHandler {
   }
 
   private void handleXACT(int trID) {
-
-    Random rand = new Random();
-    int commitProba = 75;
-    int randint = rand.nextInt(100);
-    MessageType choice = MessageType.TR_NO;
-    if (randint < commitProba) {
-      choice = MessageType.TR_YES;
-    }
-
     TR0NBACInfo info = getInfo(trID);
-
-    switch (choice) {
-      case TR_NO:
-        info.setVote(false);
-        node.sendToAllStorageNodes(trID, MessageType.TR_NO, 0);
-        break;
-      default:
-        info.setVote(true);
-        break;
+    if (node.getTransanctionProposition(trID)) {
+      info.setVote(true);
+    } else {
+      info.setVote(false);
+      node.sendToAllStorageNodes(trID, MessageType.TR_NO, 0);
     }
     info.incrPhase();
     node.setTimeoutEvent(timerHandler, delay, 1, (Object) trID);

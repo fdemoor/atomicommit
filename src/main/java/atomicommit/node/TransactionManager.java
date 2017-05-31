@@ -36,6 +36,39 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
   private int nbTrA = 0;
   private long startTime;
 
+  TransactionManager(NodeConfig conf, int id, List<Integer> servers, NodeIDWrapper wrapper) {
+
+    config = conf;
+    nodesWrapper = wrapper;
+    storageNodes = servers;
+    myID = nodesWrapper.getNodeID(id);
+    transactionIDs = new Counter();
+
+    transactions = new HashMap<Integer,TransactionWrapper>();
+
+    channel = new ZMQChannel(nodesWrapper);
+    channel.setIn(myID);
+    Iterator<Integer> it = storageNodes.iterator();
+    while (it.hasNext()) {
+      NodeID idNode = nodesWrapper.getNodeID(it.next());
+      channel.addOut(idNode);
+    }
+    MessageHandler msgHandler = new MessageHandler(this);
+    switch (config.getTrProtocol()) {
+      case TWO_PHASE_COMMIT:
+        msgHandler.setTransactionHandler(new MsgHandler2PCMaster(this));
+        break;
+      case ZERO_NBAC:
+        msgHandler.setTransactionHandler(new MsgHandler0NBACMaster(this));
+        break;
+    }
+    channel.setMessageEventHandler(msgHandler);
+
+  }
+
+
+  /* TRANSACTION WRAPPER */
+
   private class TransactionWrapper {
 
     private final Transaction transaction;
@@ -88,35 +121,8 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
 
   }
 
-  TransactionManager(NodeConfig conf, int id, List<Integer> servers, NodeIDWrapper wrapper) {
 
-    config = conf;
-    nodesWrapper = wrapper;
-    storageNodes = servers;
-    myID = nodesWrapper.getNodeID(id);
-    transactionIDs = new Counter();
-
-    transactions = new HashMap<Integer,TransactionWrapper>();
-
-    channel = new ZMQChannel(nodesWrapper);
-    channel.setIn(myID);
-    Iterator<Integer> it = storageNodes.iterator();
-    while (it.hasNext()) {
-      NodeID idNode = nodesWrapper.getNodeID(it.next());
-      channel.addOut(idNode);
-    }
-    MessageHandler msgHandler = new MessageHandler(this);
-    switch (config.getTrProtocol()) {
-      case TWO_PHASE_COMMIT:
-        msgHandler.setTransactionHandler(new MsgHandler2PCMaster(this));
-        break;
-      case ZERO_NBAC:
-        msgHandler.setTransactionHandler(new MsgHandler0NBACMaster(this));
-        break;
-    }
-    channel.setMessageEventHandler(msgHandler);
-
-  }
+  /* TRANSACTION METHODS */
 
   public int startTransaction() {
     int trID = transactionIDs.get();
@@ -138,6 +144,7 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
     sendToAllStorageNodes(trID, MessageType.TR_XACT);
   }
 
+  @Override
   public void commitTransaction(int trID) {
     if (!transactions.get(trID).isDone()) {
       transactions.get(trID).setDone();
@@ -149,6 +156,7 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
     }
   }
 
+  @Override
   public void abortTransaction(int trID) {
     if (!transactions.get(trID).isDone()) {
       transactions.get(trID).setDone();
@@ -165,7 +173,7 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
     if (nbTrDone == config.getNbTr()) {
       long duration = System.currentTimeMillis() - startTime;
       logger.info("Took {} ms for {} transactions: {} commited, {} aborted", duration, config.getNbTr(), nbTrC, nbTrA);
-      System.exit(1);
+      System.exit(0); // FIXME
     }
   }
 
@@ -177,6 +185,15 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
     return transactions.get(trID).getDecision();
   }
 
+  public void runTransaction(int delay, int times) {
+    EventHandler handlerTimer = new RunTransaction(this);
+    channel.setTimeoutEventHandler(handlerTimer, delay, times, null);
+  }
+
+
+  /* CHANNEL METHODS */
+
+  @Override
   public void sendToAllStorageNodes(int id, MessageType type) {
     Message message = new Message(myID, id, type);
     Iterator<Integer> it = storageNodes.iterator();
@@ -185,21 +202,22 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
     }
   }
 
-  public Message deliverMessage() {
-    return channel.deliver();
+  @Override
+  public void sendToAllStorageNodes(int id, MessageType type, int k) {
+    Message message = new Message(myID, id, type, k);
+    Iterator<Integer> it = storageNodes.iterator();
+    while (it.hasNext()) {
+      channel.send(nodesWrapper.getNodeID(it.next()), message);
+    }
   }
 
-  public void runTransaction(int delay, int times) {
-    EventHandler handlerTimer = new RunTransaction(this);
-    channel.setTimeoutEventHandler(handlerTimer, delay, times, null);
-  }
+
+  /* MAIN */
 
   @Override
   public void run(Object[] args) {
     channel.startPolling();
     channel.close();
   }
-
-
 
 }

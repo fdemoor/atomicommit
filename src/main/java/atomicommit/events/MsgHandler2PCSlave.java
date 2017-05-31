@@ -20,17 +20,11 @@ public class MsgHandler2PCSlave implements EventHandler {
   }
 
   private void handleXACT(int trID) {
-
-    Random rand = new Random();
-    int commitProba = 75;
-    int randint = rand.nextInt(100);
-    MessageType choice = MessageType.TR_NO;
-    if (randint < commitProba) {
-      choice = MessageType.TR_YES;
+    if (node.getTransanctionProposition(trID)) {
+      node.sendToManager(trID, MessageType.TR_YES);
+    } else {
+      node.sendToManager(trID, MessageType.TR_NO);
     }
-
-    node.sendToManager(trID, choice);
-
   }
 
   public void handle(Object arg_) {

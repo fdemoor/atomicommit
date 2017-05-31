@@ -65,6 +65,9 @@ public class StorageNode extends Node implements ZThread.IDetachedRunnable {
 
   }
 
+
+  /* TRANSACTION WRAPPER */
+
   private class TransactionWrapper {
 
     private final Transaction transaction;
@@ -81,13 +84,8 @@ public class StorageNode extends Node implements ZThread.IDetachedRunnable {
 
   }
 
-  public void setTimeoutEvent(EventHandler handler, int delay, int times, Object arg_) {
-    channel.setTimeoutEventHandler(handler, delay, times, arg_);
-  }
 
-  public void removeTimeoutEvent() {
-    channel.removeTimeoutEvent();
-  }
+  /* TRANSACTION METHODS */
 
   public void startTransaction(int trID) {
     logger.debug("Storage Node #{} starts transaction #{}", myID, trID);
@@ -109,6 +107,11 @@ public class StorageNode extends Node implements ZThread.IDetachedRunnable {
     return transactions.get(trID).info;
   }
 
+  public boolean getTransanctionProposition(int trID) {
+    Transaction tr = transactions.get(trID).transaction;
+    return tr.propose();
+  }
+
   public ProtocolInfo getConsensusInfo(int trID) {
     ProtocolInfo info = transactions.get(trID).consInfo;
     if (info == null) {
@@ -118,26 +121,31 @@ public class StorageNode extends Node implements ZThread.IDetachedRunnable {
     return info;
   }
 
+  @Override
   public void commitTransaction(int trID) {
     transactions.get(trID).transaction.commit();
     logger.debug("Storage Node #{} commits transaction #{}", myID, trID);
   }
 
+  @Override
   public void abortTransaction(int trID) {
     transactions.get(trID).transaction.abort();
     logger.debug("Storage Node #{} aborts transaction #{}", myID, trID);
   }
+
+  public int getTransanctionNbNodes(int trID) {
+    return transactions.get(trID).nbInvolvedNodes;
+  }
+
+
+  /* CHANNEL METHODS */
 
   public void sendToManager(int id, MessageType type) {
     Message message = new Message(myID, id, type);
     channel.send(trManager, message);
   }
 
-  public void sendToNode(int id, MessageType type, NodeID dest) {
-    Message message = new Message(myID, id, type);
-    channel.send(dest, message);
-  }
-
+  @Override
   public void sendToAllStorageNodes(int id, MessageType type) {
     Message message = new Message(myID, id, type);
     Iterator<Integer> it = nodes.iterator();
@@ -149,6 +157,7 @@ public class StorageNode extends Node implements ZThread.IDetachedRunnable {
     }
   }
 
+  @Override
   public void sendToAllStorageNodes(int id, MessageType type, int k) {
     Message message = new Message(myID, id, type, k);
     Iterator<Integer> it = nodes.iterator();
@@ -160,13 +169,7 @@ public class StorageNode extends Node implements ZThread.IDetachedRunnable {
     }
   }
 
-  public Message deliverMessage() {
-    return channel.deliver();
-  }
-
-  public int getTransanctionNbNodes(int trID) {
-    return transactions.get(trID).nbInvolvedNodes;
-  }
+  /* UTIL METHODS */
 
   public boolean checkManager(NodeID id) {
     boolean test = trManager.equals(id);
@@ -176,12 +179,13 @@ public class StorageNode extends Node implements ZThread.IDetachedRunnable {
     return test;
   }
 
+
+  /* MAIN */
+
   @Override
   public void run(Object[] args) {
     channel.startPolling();
     channel.close();
   }
-
-
 
 }
