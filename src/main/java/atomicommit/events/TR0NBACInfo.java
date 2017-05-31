@@ -1,5 +1,8 @@
 package atomicommit.events;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import atomicommit.util.node.NodeID;
 
 import java.util.List;
@@ -12,6 +15,7 @@ public class TR0NBACInfo implements ProtocolInfo {
   private boolean decided;
   private boolean zero;
   private int phase;
+  private final Logger logger = LogManager.getLogger();
 
   public TR0NBACInfo() {
     myAcks = new ArrayList<NodeID>();
@@ -59,6 +63,7 @@ public class TR0NBACInfo implements ProtocolInfo {
   }
 
   public boolean allAcks(int n) {
+    //logger.debug("Verify Acks: {} acks for {} requested", myAcks.size(), n);
     return (myAcks.size() == n);
   }
 

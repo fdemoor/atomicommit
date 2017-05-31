@@ -62,7 +62,7 @@ public class MsgHandler0NBACSlave implements EventHandler {
           info.setDecided();
           decide(trID, true);
         } else if (info.getZero() && info.getVote()) {
-          node.sendToAllStorageNodes(trID, MessageType.TR_NO);
+          node.sendToAllStorageNodes(trID, MessageType.TR_NO, 1);
           node.setTimeoutEvent(this, delay * 2, 1, (Object) trID);
         } else {
           node.setTimeoutEvent(this, delay, 1, (Object) trID);
@@ -72,8 +72,10 @@ public class MsgHandler0NBACSlave implements EventHandler {
         Consensus cons = getCons(trID);
         if (info.allAcks(node.getTransanctionNbNodes(trID))) {
           cons.setVote(false);
+          //logger.debug("Node {} proposes 0 to consensus", node.getID());
         } else {
           cons.setVote(true);
+          //logger.debug("Node {} proposes 1 to consensus", node.getID());
         }
         node.sendToNode(trID, MessageType.CONS_START, node.getID());
       }
@@ -103,7 +105,7 @@ public class MsgHandler0NBACSlave implements EventHandler {
     switch (choice) {
       case TR_NO:
         info.setVote(false);
-        node.sendToAllStorageNodes(trID, MessageType.TR_NO);
+        node.sendToAllStorageNodes(trID, MessageType.TR_NO, 0);
         break;
       default:
         info.setVote(true);
@@ -114,15 +116,15 @@ public class MsgHandler0NBACSlave implements EventHandler {
 
   }
 
-  private void handleNO(int trID, NodeID src) {
+  private void handleNO(int trID, NodeID src, int key) {
     TR0NBACInfo info = getInfo(trID);
     int phase = info.getPhase();
 
-    if (phase == 1) {
+    if (phase == 1 && key == 0) {
       info.setZero();
       node.sendToNode(trID, MessageType.TR_ACK, src);
 
-    } else if (phase == 2) {
+    } else if (phase == 2 && key == 1) {
       if ( ! (info.getVote() && info.getDecided()) ) {
         node.sendToNode(trID, MessageType.TR_ACK, src);
       }
@@ -155,9 +157,9 @@ public class MsgHandler0NBACSlave implements EventHandler {
         }
         break;
       case TR_NO:
-        handleNO(trID, src);
+        handleNO(trID, src, message.getKey());
         break;
-      case TR_ABORT:
+      case TR_ACK:
         handleACK(trID, src);
         break;
       case TR_CONS_COMMIT:
