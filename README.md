@@ -1,6 +1,6 @@
 # Atomic Commit Protocols Implementation
 
-This project aims at implementing and evaluating several atomic commit protocols.
+This project aims at implementing and evaluating several atomic commit protocols from "[How Fast can a Distributed Transaction Commit?](https://infoscience.epfl.ch/record/225579)".
 The reference protocol is the well-known Two Phase Commit (2PC).
 
 ## Getting started
@@ -21,7 +21,8 @@ This project is under the GNU General Public License v3.0 - see the [LICENSE](LI
 
 - [x] Better organization (sub-packages?)
 - [x] Parameters for proper configuration
-- [ ] Indulgent Consensus implementation (Raft leader election?)
-- [ ] 0NBAC Protocol
-- [ ] NBAC Protocol
+- [x] Indulgent Consensus implementation (Raft leader election?)
+- [x] 0NBAC Protocol
+- [ ] INBAC Protocol
+- [ ] Add == null tests and handle problems (exceptions?)
 - [ ] Documentation and comments
