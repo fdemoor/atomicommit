@@ -15,7 +15,7 @@ public class Main {
     NodeIDWrapper wrapper = new NodeIDWrapper();
     int N = 4;
 
-    NodeConfig config = new NodeConfig(NodeConfig.TrProtocol.TWO_PHASE_COMMIT, 100, 1000);
+    NodeConfig config = new NodeConfig(NodeConfig.TrProtocol.TWO_PHASE_COMMIT, 100, 1000, 3);
 
     int managerID = 0;
     wrapper.add(managerID, "tcp://localhost:" + managerID);

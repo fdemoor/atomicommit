@@ -29,7 +29,6 @@ public class StorageNode extends Node implements ZThread.IDetachedRunnable {
   private final NodeID trManager;
   private final List<Integer> nodes;
   private final HashMap<Integer, TransactionWrapper> transactions;
-  private final NodeIDWrapper nodesWrapper;
   private final Logger logger = LogManager.getLogger();
 
   StorageNode(NodeConfig conf, int id, int manager, List<Integer> nodesList, NodeIDWrapper wrapper) {

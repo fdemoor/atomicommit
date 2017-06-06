@@ -3,16 +3,30 @@ package atomicommit.util.node;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.HashMap;
+import java.util.Collections;
 
 /** NodeID wrapper to avoid multiple instances of some node IDs */
 public class NodeIDWrapper {
 
-  private HashMap<Integer,NodeID> nodes;
+  private final ArrayList<Integer> ids;
+  private final HashMap<Integer,NodeID> nodes;
+  private boolean sorted;
   private final Logger logger = LogManager.getLogger();
 
   public NodeIDWrapper() {
+    ids = new ArrayList<Integer>();
     nodes = new HashMap<Integer,NodeID>();
+    sorted = true;
+  }
+
+  private void sort() {
+    if (!sorted) {
+      Collections.sort(ids);
+      sorted = true;
+    }
   }
 
   /** Adds a node ID
@@ -22,6 +36,8 @@ public class NodeIDWrapper {
   public void add(int d, String ip) {
     NodeID node = new NodeID(d, ip);
     nodes.put(d, node);
+    ids.add(d);
+    sorted = false;
   }
 
   /** Returns node ID asked, null if unknown
@@ -34,6 +50,42 @@ public class NodeIDWrapper {
       logger.error("Asking for unknown node #{}", d);
     }
     return node;
+  }
+
+  /** Returns f nodes with lowest id
+   * @param self  ID of node asking the list
+   * @param f number of nodes asked
+   * @return  list of f nodes, not containing self
+   */
+  public List<NodeID> getFNodes(NodeID self, int f) {
+    sort();
+    List<NodeID> l = new ArrayList<NodeID>();
+    int k = 0;
+    while (k != f) {
+      NodeID n = getNodeID(ids.get(k));
+      if (!n.equals(self)) {
+        l.add(n);
+        k++;
+      }
+    }
+    return l;
+  }
+
+  /** Returns rank of node using identifier natural order
+   * @param self  ID of node asking its rank
+   * @return  rank, -1 if self is unknown
+   */
+  public int getRank(NodeID self) {
+    sort();
+    int k = 0;
+    while (k < ids.size()) {
+      NodeID n = getNodeID(ids.get(k));
+      if (n.equals(self)) {
+        return k;
+      }
+      k++;
+    }
+    return -1;
   }
 
 }

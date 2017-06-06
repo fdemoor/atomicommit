@@ -3,6 +3,7 @@ package atomicommit.node;
 import atomicommit.util.msg.Message;
 import atomicommit.util.msg.MessageType;
 import atomicommit.util.node.NodeID;
+import atomicommit.util.node.NodeIDWrapper;
 import atomicommit.events.EventHandler;
 import atomicommit.channels.PerfectPointToPointLinks;
 
@@ -11,6 +12,7 @@ public abstract class Node {
   protected NodeConfig config;
   protected NodeID myID;
   protected PerfectPointToPointLinks channel;
+  protected NodeIDWrapper nodesWrapper;
 
 
   /* UTIL METHODS */
@@ -27,6 +29,13 @@ public abstract class Node {
    */
   public NodeID getID() {
     return myID;
+  }
+
+  /** Returns node ID wrapper
+   * @return  node id wrapper
+   */
+  public NodeIDWrapper getIDWrapper() {
+    return nodesWrapper;
   }
 
   /** Stops node from running */

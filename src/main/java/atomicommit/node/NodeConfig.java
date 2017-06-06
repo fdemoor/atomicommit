@@ -11,11 +11,13 @@ public class NodeConfig {
   private final TrProtocol trProtocol; /* Atomic commit protocol used */
   private final int msgDelay; /* Delay in ms after which a network-failure is considered */
   private final int nbTr;
+  private final int f; /* Max number of allowed crashes */
 
-  NodeConfig(TrProtocol pr, int delay, int tr) {
+  NodeConfig(TrProtocol pr, int delay, int tr, int nbCrashes) {
     trProtocol = pr;
     msgDelay = delay;
     nbTr = tr;
+    f = nbCrashes;
   }
 
   /** Returns transaction protocol used
@@ -34,6 +36,10 @@ public class NodeConfig {
 
   int getNbTr() {
     return nbTr;
+  }
+
+  public int getF() {
+    return f;
   }
 
 }

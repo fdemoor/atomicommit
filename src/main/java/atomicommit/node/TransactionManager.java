@@ -26,8 +26,7 @@ import org.zeromq.ZThread;
 public class TransactionManager extends Node implements ZThread.IDetachedRunnable {
 
   private final List<Integer> storageNodes;
-  private final HashMap<Integer, TransactionWrapper> transactions;
-  private final NodeIDWrapper nodesWrapper;
+  private final HashMap<Integer, TransactionWrapper> transactions;;
   private final Counter transactionIDs;
 
   private final Logger logger = LogManager.getLogger();
