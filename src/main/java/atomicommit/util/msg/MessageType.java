@@ -1,5 +1,6 @@
 package atomicommit.util.msg;
 
+/** Message types */
 public enum MessageType {
 
   /* Transaction messages */

@@ -25,10 +25,16 @@ public class MessageHandler {
     }
   }
 
+  /** Sets handler for transaction related messages
+   * @param handler event handler
+   */
   public void setTransactionHandler(EventHandler handler) {
     transactionHandler = handler;
   }
 
+  /** Sets handler for consensus related messages
+   * @param handler event handler
+   */
   public void setConsensusHandler(EventHandler handler) {
     consensusHandler = handler;
   }

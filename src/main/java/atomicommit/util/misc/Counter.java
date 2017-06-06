@@ -12,18 +12,24 @@ public class Counter {
     n = d;
   }
 
+  /** Increments counter value */
   public void incr() {
     n++;
   }
 
+  /** Decrements counter value */
   public void decr() {
     n--;
   }
 
+  /** Resets counter value to 0 */
   public void reset() {
     n = 0;
   }
 
+  /** Returns counter value
+   * @return  counter value
+   */
   public int get() {
     return n;
   }

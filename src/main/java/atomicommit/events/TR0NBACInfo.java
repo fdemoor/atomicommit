@@ -63,7 +63,6 @@ public class TR0NBACInfo implements ProtocolInfo {
   }
 
   public boolean allAcks(int n) {
-    //logger.debug("Verify Acks: {} acks for {} requested", myAcks.size(), n);
     return (myAcks.size() == n);
   }
 

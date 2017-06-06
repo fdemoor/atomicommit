@@ -2,6 +2,7 @@ package atomicommit.node;
 
 public class NodeConfig {
 
+  /** Transaction protocols */
   enum TrProtocol {
     TWO_PHASE_COMMIT,
     ZERO_NBAC
@@ -17,10 +18,16 @@ public class NodeConfig {
     nbTr = tr;
   }
 
+  /** Returns transaction protocol used
+   * @return transaction protocol
+   */
   TrProtocol getTrProtocol() {
     return trProtocol;
   }
 
+  /** Returns message delay used
+   * @return  message delay in ms
+   */
   public int getMsgDelay() {
     return msgDelay;
   }

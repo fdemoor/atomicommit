@@ -72,10 +72,10 @@ public class MsgHandler0NBACSlave implements EventHandler {
         Consensus cons = getCons(trID);
         if (info.allAcks(node.getTransanctionNbNodes(trID))) {
           cons.setVote(false);
-          //logger.debug("Node {} proposes 0 to consensus", node.getID());
+          logger.debug("Node {} proposes 0 to consensus", node.getID());
         } else {
           cons.setVote(true);
-          //logger.debug("Node {} proposes 1 to consensus", node.getID());
+          logger.debug("Node {} proposes 1 to consensus", node.getID());
         }
         node.sendToNode(trID, MessageType.CONS_START, node.getID());
       }

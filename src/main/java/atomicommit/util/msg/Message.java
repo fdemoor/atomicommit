@@ -23,18 +23,30 @@ public class Message {
     key = k;
   }
 
+  /** Returns ID of the sender
+   * @return  sender ID
+   */
   public NodeID getSrc() {
     return src;
   }
 
+  /** Returns message identifier
+   * @return  identifier
+   */
   public int getID() {
     return id;
   }
 
+  /** Returns message type
+   * @return  message type
+   */
   public MessageType getType() {
     return type;
   }
 
+  /** Returns message key if given
+   * @return message key or null if no key was given
+   */
   public Integer getKey() {
     return key;
   }
