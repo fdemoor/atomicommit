@@ -58,22 +58,23 @@ public class MsgHandlerINBACSlave implements EventHandler {
       int trID = (int) arg_;
       TRINBACInfo info = getInfo(trID);
       int phase = info.getPhase();
+      int i = node.getIDWrapper().getRank(node.getID());
 
-      if  (phase == 1) {
-        info.incrPhase();
-
-      } else if (phase == 2) {
-        Consensus cons = getCons(trID);
-        if (true) {
-          cons.setVote(false);
-          logger.debug("Node {} proposes 0 to consensus", node.getID());
-        } else {
-          cons.setVote(true);
-          logger.debug("Node {} proposes 1 to consensus", node.getID());
+      if (phase == 0) {
+        if (i < f) {
+          // TODO
+        } else if (i == f) {
+          // TODO
         }
-        node.sendToNode(trID, MessageType.CONS_START, node.getID());
+      } else if (phase == 1) {
+        if (!info.decided() && !info.proposed()) {
+          if (i  < f) {
+            // TODO
+          } else {
+            // TODO
+          }
+        }
       }
-
     }
 
   }
@@ -111,20 +112,37 @@ public class MsgHandlerINBACSlave implements EventHandler {
     node.setTimeoutEvent(timerHandler, delay, 1, (Object) trID);
   }
 
-  private void handleNO(int trID, NodeID src, int key) {
+  private void handleVote(int trID, NodeID src, boolean b) {
     TRINBACInfo info = getInfo(trID);
     int phase = info.getPhase();
-
-
-
+    if (phase == 0) {
+      info.addVote0(src, b);
+    }
   }
 
-  private void handleACK(int trID, NodeID src) {
+  private void handleHelp(int trID, NodeID src) {
     TRINBACInfo info = getInfo(trID);
+    int i = node.getIDWrapper().getRank(node.getID());
+    int phase = info.getPhase();
+    if (phase == 2 && i >= f) {
+      // TODO
+    }
+  }
+
+  private void handleHelped(int trID, NodeID src) {
+    TRINBACInfo info = getInfo(trID);
+    int i = node.getIDWrapper().getRank(node.getID());
+    if (i >= f) {
+      // TODO
+      info.cntHelpIncr();
+    }
   }
 
   private void handleCONS(int trID, boolean vote) {
     TRINBACInfo info = getInfo(trID);
+    if (!info.decided()) {
+      decide(trID, vote);
+    }
   }
 
   public void handle(Object arg_) {
@@ -139,10 +157,16 @@ public class MsgHandlerINBACSlave implements EventHandler {
         }
         break;
       case TR_NO:
-        handleNO(trID, src, message.getKey());
+        handleVote(trID, src, false);
         break;
-      case TR_ACK:
-        handleACK(trID, src);
+      case TR_YES:
+        handleVote(trID, src, true);
+        break;
+      case TR_HELP:
+        handleHelp(trID, src);
+        break;
+      case TR_HELPED:
+        handleHelped(trID, src);
         break;
       case TR_CONS_COMMIT:
         handleCONS(trID, true);

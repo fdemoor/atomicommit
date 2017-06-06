@@ -18,6 +18,8 @@ crossPaths := false
 // This forbids including Scala related libraries into the dependency
 autoScalaLibrary := false
 
+javacOptions += "-Xlint:unchecked"
+
 // library dependencies. (orginization name) % (project name) % (version)
 libraryDependencies ++= Seq(
    "org.zeromq" % "jeromq" % "0.3.0",

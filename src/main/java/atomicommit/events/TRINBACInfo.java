@@ -4,19 +4,18 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import atomicommit.util.node.NodeID;
+import atomicommit.util.misc.Pair;
 
-import java.util.List;
 import java.util.ArrayList;
-import java.util.HashMap;
 
 public class TRINBACInfo implements ProtocolInfo {
 
   private int phase;
   private boolean proposed;
   private boolean decided;
-  private HashMap<NodeID,Boolean> collection0;
-  private HashMap<NodeID,Boolean> collection1;
-  private HashMap<NodeID,Boolean> collection_help;
+  private ArrayList<Pair<NodeID, Boolean>> collection0;
+  private ArrayList<Pair<NodeID, Pair<NodeID, Boolean>>> collection1;
+  private ArrayList<Pair<NodeID, Boolean>> collection_help;
   private boolean wait;
   private boolean val;
   private boolean decision;
@@ -29,9 +28,9 @@ public class TRINBACInfo implements ProtocolInfo {
     phase = 0;
     proposed = false;
     decided = false;
-    collection0 = new HashMap<NodeID,Boolean>();
-    collection1 = new HashMap<NodeID,Boolean>();
-    collection_help = new HashMap<NodeID,Boolean>();
+    collection0 = new ArrayList<Pair<NodeID, Boolean>>();
+    collection1 = new ArrayList<Pair<NodeID,Pair<NodeID, Boolean>>>();
+    collection_help = new ArrayList<Pair<NodeID, Boolean>>();
     wait = false;
     cnt = 0;
     cnt_help = 0;
@@ -47,6 +46,22 @@ public class TRINBACInfo implements ProtocolInfo {
 
   public void setVal(boolean b) {
     val = b;
+  }
+
+  public boolean decided() {
+    return decided;
+  }
+
+  public boolean proposed() {
+    return proposed;
+  }
+
+  public void cntHelpIncr() {
+    cnt_help++;
+  }
+
+  public void addVote0(NodeID node, boolean vote) {
+    collection0.add(new Pair<NodeID,Boolean>(node, vote));
   }
 
 }

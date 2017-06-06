@@ -12,6 +12,8 @@ public enum MessageType {
   TR_START,
   TR_ACK,
   TR_HELP,
+  TR_HELPED,
+  TR_COLL,
   TR_CONS_COMMIT,
   TR_CONS_ABORT,
 

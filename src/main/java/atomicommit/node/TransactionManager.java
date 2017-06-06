@@ -80,7 +80,7 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
     TransactionWrapper(Transaction tr, int n) {
       transaction = tr;
       nbInvolvedNodes = n;
-      hasProposed = new ArrayList();
+      hasProposed = new ArrayList<NodeID>();
       hasDecided = false;
       decision = true;
       done = false;
