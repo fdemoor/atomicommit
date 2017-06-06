@@ -14,7 +14,7 @@ public class Pair<V,T> {
     return v;
   }
 
-  public T getVote() {
+  public T getSecond() {
     return t;
   }
 

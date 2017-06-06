@@ -12,6 +12,7 @@ import atomicommit.util.msg.MessageType;
 import atomicommit.util.msg.Message;
 import atomicommit.util.node.NodeID;
 import atomicommit.util.node.NodeIDWrapper;
+import atomicommit.util.misc.Pair;
 import atomicommit.channels.ZMQChannel;
 import atomicommit.transaction.Transaction;
 
@@ -166,6 +167,22 @@ public class StorageNode extends Node implements ZThread.IDetachedRunnable {
         channel.send(nodeID, message);
       }
     }
+  }
+
+  public void sendToAllStorageNodes(int id, MessageType type, List<Pair<NodeID, Boolean>> l) {
+    Message message = new Message(myID, id, type, l);
+    Iterator<Integer> it = nodes.iterator();
+    while (it.hasNext()) {
+      NodeID nodeID = nodesWrapper.getNodeID(it.next());
+      if (!nodeID.equals(myID)) {
+        channel.send(nodeID, message);
+      }
+    }
+  }
+
+  public void sendToNode(int id, MessageType type, NodeID dest, List<Pair<NodeID, Boolean>> l) {
+    Message message = new Message(myID, id, type, l);
+    channel.send(dest, message);
   }
 
   /* UTIL METHODS */

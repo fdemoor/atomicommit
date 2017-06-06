@@ -5,6 +5,7 @@ import atomicommit.node.StorageNode;
 import atomicommit.util.msg.Message;
 import atomicommit.util.msg.MessageType;
 import atomicommit.util.node.NodeID;
+import atomicommit.util.misc.Pair;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -52,7 +53,7 @@ public class MsgHandlerINBACSlave implements EventHandler {
     }
   }
 
-  private class TimerHandler0NBAC implements EventHandler {
+  private class TimerHandlerINBAC implements EventHandler {
 
     public void handle(Object arg_) {
       int trID = (int) arg_;
@@ -61,13 +62,26 @@ public class MsgHandlerINBACSlave implements EventHandler {
       int i = node.getIDWrapper().getRank(node.getID());
 
       if (phase == 0) {
+
         if (i < f) {
-          // TODO
+          node.sendToAllStorageNodes(trID, MessageType.TR_COLL, info.getColl0());
+          info.incrPhase();
+          node.setTimeoutEvent(timerHandler, delay, 1, (Object) trID);
+
         } else if (i == f) {
-          // TODO
+          List<NodeID> backUps = node.getIDWrapper().getFNodes(node.getID(), f);
+          Iterator<NodeID> it = backUps.iterator();
+          while (it.hasNext()) {
+            node.sendToNode(trID, MessageType.TR_COLL, it.next(), info.getColl0());
+          }
+          info.incrPhase();
+          node.setTimeoutEvent(timerHandler, delay, 1, (Object) trID);
+
         }
       } else if (phase == 1) {
+
         if (!info.decided() && !info.proposed()) {
+
           if (i  < f) {
             // TODO
           } else {
@@ -81,7 +95,7 @@ public class MsgHandlerINBACSlave implements EventHandler {
 
   public MsgHandlerINBACSlave(StorageNode n) {
     node = n;
-    timerHandler = new TimerHandler0NBAC();
+    timerHandler = new TimerHandlerINBAC();
     delay = node.getConfig().getMsgDelay();
     f = node.getConfig().getF();
   }
@@ -138,6 +152,12 @@ public class MsgHandlerINBACSlave implements EventHandler {
     }
   }
 
+  private void handleColl(int trID, NodeID src, List<Pair<NodeID,Boolean>> votes) {
+    TRINBACInfo info = getInfo(trID);
+    info.addVote1(src, votes);
+    info.cntIncr();
+  }
+
   private void handleCONS(int trID, boolean vote) {
     TRINBACInfo info = getInfo(trID);
     if (!info.decided()) {
@@ -161,6 +181,9 @@ public class MsgHandlerINBACSlave implements EventHandler {
         break;
       case TR_YES:
         handleVote(trID, src, true);
+        break;
+      case TR_COLL:
+        handleColl(trID, src, message.getVotes());
         break;
       case TR_HELP:
         handleHelp(trID, src);

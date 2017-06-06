@@ -7,15 +7,16 @@ import atomicommit.util.node.NodeID;
 import atomicommit.util.misc.Pair;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class TRINBACInfo implements ProtocolInfo {
 
   private int phase;
   private boolean proposed;
   private boolean decided;
-  private ArrayList<Pair<NodeID, Boolean>> collection0;
-  private ArrayList<Pair<NodeID, Pair<NodeID, Boolean>>> collection1;
-  private ArrayList<Pair<NodeID, Boolean>> collection_help;
+  private List<Pair<NodeID, Boolean>> collection0;
+  private List<Pair<NodeID, List<Pair<NodeID, Boolean>>>> collection1;
+  private List<Pair<NodeID, Boolean>> collection_help;
   private boolean wait;
   private boolean val;
   private boolean decision;
@@ -29,7 +30,7 @@ public class TRINBACInfo implements ProtocolInfo {
     proposed = false;
     decided = false;
     collection0 = new ArrayList<Pair<NodeID, Boolean>>();
-    collection1 = new ArrayList<Pair<NodeID,Pair<NodeID, Boolean>>>();
+    collection1 = new ArrayList<Pair<NodeID,List<Pair<NodeID, Boolean>>>>();
     collection_help = new ArrayList<Pair<NodeID, Boolean>>();
     wait = false;
     cnt = 0;
@@ -60,8 +61,20 @@ public class TRINBACInfo implements ProtocolInfo {
     cnt_help++;
   }
 
+  public void cntIncr() {
+    cnt++;
+  }
+
   public void addVote0(NodeID node, boolean vote) {
     collection0.add(new Pair<NodeID,Boolean>(node, vote));
+  }
+
+  public void addVote1(NodeID src, List<Pair<NodeID,Boolean>> votes) {
+    collection1.add(new Pair<NodeID,List<Pair<NodeID,Boolean>>>(src, votes));
+  }
+
+  public List<Pair<NodeID, Boolean>> getColl0() {
+    return collection0;
   }
 
 }

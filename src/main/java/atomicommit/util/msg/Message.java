@@ -1,6 +1,12 @@
 package atomicommit.util.msg;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import atomicommit.util.node.NodeID;
+import atomicommit.util.misc.Pair;
+
+import java.util.List;
 
 public class Message {
 
@@ -8,12 +14,15 @@ public class Message {
   private final int id;
   private final MessageType type;
   private final Integer key;
+  private final List<Pair<NodeID,Boolean>> votes;
+  private final Logger logger = LogManager.getLogger();
 
   public Message(NodeID srcID, int msgID, MessageType msgType) {
     src = srcID;
     id = msgID;
     type = msgType;
     key = null;
+    votes = null;
   }
 
   public Message(NodeID srcID, int msgID, MessageType msgType, int k) {
@@ -21,6 +30,18 @@ public class Message {
     id = msgID;
     type = msgType;
     key = k;
+    votes = null;
+  }
+
+  public Message(NodeID srcID, int msgID, MessageType msgType, List<Pair<NodeID,Boolean>> l) {
+    if (msgType != MessageType.TR_COLL) {
+      logger.error("TR_COLL expected");
+    }
+    src = srcID;
+    id = msgID;
+    type = msgType;
+    key = null;
+    votes = l;
   }
 
   /** Returns ID of the sender
@@ -49,6 +70,10 @@ public class Message {
    */
   public Integer getKey() {
     return key;
+  }
+
+  public List<Pair<NodeID,Boolean>> getVotes() {
+    return votes;
   }
 
 }
