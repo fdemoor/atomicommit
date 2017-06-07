@@ -12,6 +12,8 @@ import org.apache.logging.log4j.Logger;
 
 import java.util.Random;
 import java.util.HashMap;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Iterator;
 
@@ -64,7 +66,7 @@ public class MsgHandlerINBACSlave implements EventHandler {
       if (phase == 0) {
 
         if (i < f) {
-          node.sendToAllStorageNodes(trID, MessageType.TR_COLL, info.getColl0());
+          node.sendToAllStorageNodes(trID, MessageType.TR_COLL, info.getVote0());
           info.incrPhase();
           node.setTimeoutEvent(timerHandler, delay, 1, (Object) trID);
 
@@ -72,7 +74,7 @@ public class MsgHandlerINBACSlave implements EventHandler {
           List<NodeID> backUps = node.getIDWrapper().getFNodes(node.getID(), f);
           Iterator<NodeID> it = backUps.iterator();
           while (it.hasNext()) {
-            node.sendToNode(trID, MessageType.TR_COLL, it.next(), info.getColl0());
+            node.sendToNode(trID, MessageType.TR_COLL, it.next(), info.getVote0());
           }
           info.incrPhase();
           node.setTimeoutEvent(timerHandler, delay, 1, (Object) trID);
@@ -82,10 +84,45 @@ public class MsgHandlerINBACSlave implements EventHandler {
 
         if (!info.decided() && !info.proposed()) {
 
-          if (i  < f) {
+          if (i < f) {
             // TODO
           } else {
-            // TODO
+            info.incrPhase();
+            Set<Pair<NodeID,Boolean>> collection_val = new HashSet<Pair<NodeID,Boolean>>();
+            Iterator<Pair<NodeID, Set<Pair<NodeID, Boolean>>>> it2 = info.getVote1().iterator();
+            while (it2.hasNext()) {
+              info.addVote0(it2.next().getSecond());
+            }
+            info.addVote0(node.getID(), info.getVal());
+
+            if (info.checkAllVote1(node.getTransanctionNbNodes(trID), f)) {
+              boolean decision = info.getAnd1();
+              info.decide(decision);
+              decide(trID, decision);
+
+            } else if (info.cntGet() >= 1) {
+              Pair<Boolean,Boolean> exists = info.checkExistVote1(f);
+              Consensus cons = getCons(trID);
+
+              if (exists.getFirst()) {
+                info.propose(exists.getSecond());
+                cons.setVote(exists.getSecond());
+
+              } else {
+                info.propose(false);
+                cons.setVote(false);
+              }
+
+              node.sendToNode(trID, MessageType.CONS_START, node.getID());
+
+            } else {
+              info.setWait(true);
+              List<NodeID> nodes = node.getIDWrapper().getOtherNodes(f);
+              Iterator<NodeID> it3 = nodes.iterator();
+              while (it3.hasNext()) {
+                node.sendToNode(trID, MessageType.TR_HELP, it3.next());
+              }
+            }
           }
         }
       }
@@ -117,6 +154,9 @@ public class MsgHandlerINBACSlave implements EventHandler {
       node.sendToNode(trID, type, it.next());
     }
     if (i <= f) {
+      if (i < f) {
+        node.sendToNode(trID, type, node.getID());
+      }
       node.setTimeoutEvent(timerHandler, delay, 1, (Object) trID);
     } else {
       node.setTimeoutEvent(timerHandler, delay * 2, 1, (Object) trID);
@@ -139,20 +179,20 @@ public class MsgHandlerINBACSlave implements EventHandler {
     int i = node.getIDWrapper().getRank(node.getID());
     int phase = info.getPhase();
     if (phase == 2 && i >= f) {
-      // TODO
+      node.sendToNode(trID, MessageType.TR_HELPED, src, info.getVote0());
     }
   }
 
-  private void handleHelped(int trID, NodeID src) {
+  private void handleHelped(int trID, NodeID src, Set<Pair<NodeID,Boolean>> votes) {
     TRINBACInfo info = getInfo(trID);
     int i = node.getIDWrapper().getRank(node.getID());
     if (i >= f) {
-      // TODO
+      info.addVoteHelp(votes);
       info.cntHelpIncr();
     }
   }
 
-  private void handleColl(int trID, NodeID src, List<Pair<NodeID,Boolean>> votes) {
+  private void handleColl(int trID, NodeID src, Set<Pair<NodeID,Boolean>> votes) {
     TRINBACInfo info = getInfo(trID);
     info.addVote1(src, votes);
     info.cntIncr();
@@ -189,7 +229,7 @@ public class MsgHandlerINBACSlave implements EventHandler {
         handleHelp(trID, src);
         break;
       case TR_HELPED:
-        handleHelped(trID, src);
+        handleHelped(trID, src, message.getVotes());
         break;
       case TR_CONS_COMMIT:
         handleCONS(trID, true);

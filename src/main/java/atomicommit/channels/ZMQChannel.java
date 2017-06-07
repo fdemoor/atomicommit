@@ -20,8 +20,8 @@ import org.zeromq.ZThread;
 import java.util.HashMap;
 import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
-import java.util.ArrayList;
+import java.util.Set;
+import java.util.HashSet;
 
 public class ZMQChannel implements PerfectPointToPointLinks {
 
@@ -103,7 +103,7 @@ public class ZMQChannel implements PerfectPointToPointLinks {
       msg.add("" + message.getID());
       msg.add(message.getType().name());
       Integer key = message.getKey();
-      List<Pair<NodeID,Boolean>> votes = message.getVotes();
+      Set<Pair<NodeID,Boolean>> votes = message.getVotes();
       if (key != null) {
         msg.add("" + key);
         logger.debug("Node #{} sent [{}, {}, {}] to node #{}", message.getSrc(), message.getID(), message.getType(), key, dest);
@@ -135,7 +135,8 @@ public class ZMQChannel implements PerfectPointToPointLinks {
     } else {
       switch (type) {
         case TR_COLL:
-          List<Pair<NodeID,Boolean>> votes = new ArrayList<Pair<NodeID,Boolean>>();
+        case TR_HELPED:
+          Set<Pair<NodeID,Boolean>> votes = new HashSet<Pair<NodeID,Boolean>>();
           String vote = msg.popString();
           while (key != null && vote != null) {
             votes.add(new Pair<NodeID,Boolean>(nodesWrapper.getNodeID(Integer.parseInt(key)), Boolean.valueOf(vote)));

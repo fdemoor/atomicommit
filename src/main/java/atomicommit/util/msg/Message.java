@@ -6,7 +6,7 @@ import org.apache.logging.log4j.Logger;
 import atomicommit.util.node.NodeID;
 import atomicommit.util.misc.Pair;
 
-import java.util.List;
+import java.util.Set;
 
 public class Message {
 
@@ -14,7 +14,7 @@ public class Message {
   private final int id;
   private final MessageType type;
   private final Integer key;
-  private final List<Pair<NodeID,Boolean>> votes;
+  private final Set<Pair<NodeID,Boolean>> votes;
   private final Logger logger = LogManager.getLogger();
 
   public Message(NodeID srcID, int msgID, MessageType msgType) {
@@ -33,9 +33,9 @@ public class Message {
     votes = null;
   }
 
-  public Message(NodeID srcID, int msgID, MessageType msgType, List<Pair<NodeID,Boolean>> l) {
-    if (msgType != MessageType.TR_COLL) {
-      logger.error("TR_COLL expected");
+  public Message(NodeID srcID, int msgID, MessageType msgType, Set<Pair<NodeID,Boolean>> l) {
+    if (msgType != MessageType.TR_COLL || msgType != MessageType.TR_HELPED) {
+      logger.error("TR_COLL or TR_HELPED expected");
     }
     src = srcID;
     id = msgID;
@@ -72,7 +72,7 @@ public class Message {
     return key;
   }
 
-  public List<Pair<NodeID,Boolean>> getVotes() {
+  public Set<Pair<NodeID,Boolean>> getVotes() {
     return votes;
   }
 

@@ -71,6 +71,19 @@ public class NodeIDWrapper {
     return l;
   }
 
+  /** Returns nodes with rank greather than f
+   * @param f int
+   * @return  list of nodes with rank greather than f
+   */
+  public List<NodeID> getOtherNodes(int f) {
+    sort();
+    List<NodeID> l = new ArrayList<NodeID>();
+    for (int k = f; f < nodes.size(); k++) {
+      NodeID n = getNodeID(ids.get(k));
+    }
+    return l;
+  }
+
   /** Returns rank of node using identifier natural order
    * @param self  ID of node asking its rank
    * @return  rank, -1 if self is unknown

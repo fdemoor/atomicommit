@@ -28,7 +28,7 @@ public class Consensus implements ProtocolInfo {
     started = true;
   }
 
-  public void isStarted() {
+  public boolean isStarted() {
     return started;
   }
 

@@ -22,6 +22,7 @@ import org.apache.logging.log4j.Logger;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Iterator;
+import java.util.Set;
 
 import org.zeromq.ZThread;
 
@@ -169,7 +170,7 @@ public class StorageNode extends Node implements ZThread.IDetachedRunnable {
     }
   }
 
-  public void sendToAllStorageNodes(int id, MessageType type, List<Pair<NodeID, Boolean>> l) {
+  public void sendToAllStorageNodes(int id, MessageType type, Set<Pair<NodeID, Boolean>> l) {
     Message message = new Message(myID, id, type, l);
     Iterator<Integer> it = nodes.iterator();
     while (it.hasNext()) {
@@ -180,7 +181,7 @@ public class StorageNode extends Node implements ZThread.IDetachedRunnable {
     }
   }
 
-  public void sendToNode(int id, MessageType type, NodeID dest, List<Pair<NodeID, Boolean>> l) {
+  public void sendToNode(int id, MessageType type, NodeID dest, Set<Pair<NodeID, Boolean>> l) {
     Message message = new Message(myID, id, type, l);
     channel.send(dest, message);
   }
