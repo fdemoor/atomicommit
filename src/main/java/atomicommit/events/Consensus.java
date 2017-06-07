@@ -7,6 +7,7 @@ import java.util.ArrayList;
 
 public class Consensus implements ProtocolInfo {
 
+  private boolean started;
   private boolean myVote;
   private final List<NodeID> myAcks;
   private boolean elected;
@@ -15,11 +16,20 @@ public class Consensus implements ProtocolInfo {
   private int phase;
 
   public Consensus() {
+    started = false;
     myAcks = new ArrayList<NodeID>();
     elected = false;
     done = false;
     tryingLead = false;
     phase = 0;
+  }
+
+  public void start() {
+    started = true;
+  }
+
+  public void isStarted() {
+    return started;
   }
 
   public boolean isDone() {

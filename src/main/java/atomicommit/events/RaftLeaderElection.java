@@ -59,16 +59,18 @@ public class RaftLeaderElection implements EventHandler {
 
   private void handleXACT(int trID, NodeID src, int k) {
     Consensus info = getInfo(trID);
-    int phase = info.getPhase();
-    if (info.isTryingLead() && phase == k) {
-      node.sendToNode(trID, MessageType.CONS_NO, src);
-    } else {
-      node.sendToNode(trID, MessageType.CONS_YES, src);
-      info.resetTryingLead();
-    }
-    if (!info.isDone()) {
-      node.removeTimeoutEvent();
-      setTimer(trID);
+    if (info.isStarted()) {
+      int phase = info.getPhase();
+      if (info.isTryingLead() && phase == k) {
+        node.sendToNode(trID, MessageType.CONS_NO, src);
+      } else {
+        node.sendToNode(trID, MessageType.CONS_YES, src);
+        info.resetTryingLead();
+      }
+      if (!info.isDone()) {
+        node.removeTimeoutEvent();
+        setTimer(trID);
+      }
     }
   }
 
@@ -112,6 +114,8 @@ public class RaftLeaderElection implements EventHandler {
 
     switch(type) {
       case CONS_START:
+        Consensus info = getInfo(trID);
+        info.start();
         setTimer(trID);
         break;
       case CONS_XACT:
