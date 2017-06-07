@@ -18,4 +18,15 @@ public class Pair<V,T> {
     return t;
   }
 
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("<");
+    sb.append(v.toString());
+    sb.append(",");
+    sb.append(t.toString());
+    sb.append(">");
+    return sb.toString();
+  }
+
 }

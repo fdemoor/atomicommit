@@ -15,17 +15,18 @@ public class Main {
     NodeIDWrapper wrapper = new NodeIDWrapper();
     int N = 4;
 
-    NodeConfig config = new NodeConfig(NodeConfig.TrProtocol.TWO_PHASE_COMMIT, 100, 1000, 1);
+    NodeConfig config = new NodeConfig(NodeConfig.TrProtocol.INBAC, 1000, 1, 1);
 
     int managerID = 0;
-    wrapper.add(managerID, "tcp://localhost:" + managerID);
+    wrapper.add(managerID, "tcp://localhost:" + managerID, 0);
     ArrayList<Integer> storageIDs = new ArrayList<Integer>();
     for (int i = 1; i < N; i++) {
       storageIDs.add(i);
-      wrapper.add(i, "tcp://localhost:" + i);
+      wrapper.add(i, "tcp://localhost:" + i, 1);
     }
     for (int i = 1; i < N; i++) {
-      ZThread.start(new StorageNode(config, i, managerID, storageIDs, wrapper));
+      NodeIDWrapper wrapper2 = new NodeIDWrapper(wrapper);
+      ZThread.start(new StorageNode(config, i, managerID, storageIDs, wrapper2));
     }
 
     TransactionManager mng = new TransactionManager(config, managerID, storageIDs, wrapper);

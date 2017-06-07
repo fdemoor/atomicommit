@@ -183,8 +183,6 @@ public class MsgHandlerINBACSlave implements EventHandler {
       node.setTimeoutEvent(timerHandler, delay * 2, 1, (Object) trID);
       info.incrPhase();
     }
-    info.incrPhase();
-    node.setTimeoutEvent(timerHandler, delay, 1, (Object) trID);
   }
 
   private void handleVote(int trID, NodeID src, boolean b) {

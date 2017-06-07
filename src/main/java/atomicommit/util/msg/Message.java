@@ -34,8 +34,8 @@ public class Message {
   }
 
   public Message(NodeID srcID, int msgID, MessageType msgType, Set<Pair<NodeID,Boolean>> l) {
-    if (msgType != MessageType.TR_COLL || msgType != MessageType.TR_HELPED) {
-      logger.error("TR_COLL or TR_HELPED expected");
+    if (msgType != MessageType.TR_COLL && msgType != MessageType.TR_HELPED) {
+      logger.error("TR_COLL or TR_HELPED expected but got {}", msgType);
     }
     src = srcID;
     id = msgID;

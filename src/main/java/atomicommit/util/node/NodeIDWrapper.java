@@ -22,6 +22,12 @@ public class NodeIDWrapper {
     sorted = true;
   }
 
+  public NodeIDWrapper(NodeIDWrapper that) {
+    ids = new ArrayList<Integer>(that.ids);
+    nodes = new HashMap<Integer,NodeID>(that.nodes);
+    sorted = that.sorted;
+  }
+
   private void sort() {
     if (!sorted) {
       Collections.sort(ids);
@@ -32,11 +38,14 @@ public class NodeIDWrapper {
   /** Adds a node ID
    * @param d node int identifier
    * @param ip  node ip
+   * @param type  0 if manager, anything else if storage node
    */
-  public void add(int d, String ip) {
+  public void add(int d, String ip, int type) {
     NodeID node = new NodeID(d, ip);
     nodes.put(d, node);
-    ids.add(d);
+    if (type != 0) {
+      ids.add(d);
+    }
     sorted = false;
   }
 
@@ -60,13 +69,14 @@ public class NodeIDWrapper {
   public List<NodeID> getFNodes(NodeID self, int f) {
     sort();
     List<NodeID> l = new ArrayList<NodeID>();
-    int k = 0;
+    int k = 0, s = 0;
     while (k != f) {
-      NodeID n = getNodeID(ids.get(k));
+      NodeID n = getNodeID(ids.get(s));
       if (!n.equals(self)) {
         l.add(n);
         k++;
       }
+      s++;
     }
     return l;
   }
@@ -78,7 +88,7 @@ public class NodeIDWrapper {
   public List<NodeID> getOtherNodes(int f) {
     sort();
     List<NodeID> l = new ArrayList<NodeID>();
-    for (int k = f; f < nodes.size(); k++) {
+    for (int k = f; k < ids.size(); k++) {
       NodeID n = getNodeID(ids.get(k));
     }
     return l;
