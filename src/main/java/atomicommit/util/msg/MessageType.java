@@ -24,6 +24,8 @@ public enum MessageType {
   CONS_NO,
   CONS_COMMIT,
   CONS_ABORT,
-  CONS_ACK
+  CONS_ACK,
+
+  NODE_STOP
 
 }

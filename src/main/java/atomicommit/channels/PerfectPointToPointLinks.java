@@ -8,11 +8,6 @@ import atomicommit.util.node.NodeID;
 /** Channel interface for message passing between processes */
 public interface PerfectPointToPointLinks {
 
-  /** Bind a socket for this node
-   * @param id  ID of binding node
-   */
-  void setIn(NodeID id);
-
   /** Add a connecting socket to this node
    * @param id  ID of connecting node
    */

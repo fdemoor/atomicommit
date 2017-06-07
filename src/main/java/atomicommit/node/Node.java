@@ -1,5 +1,8 @@
 package atomicommit.node;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import atomicommit.util.msg.Message;
 import atomicommit.util.msg.MessageType;
 import atomicommit.util.node.NodeID;
@@ -7,12 +10,13 @@ import atomicommit.util.node.NodeIDWrapper;
 import atomicommit.events.EventHandler;
 import atomicommit.channels.PerfectPointToPointLinks;
 
-public abstract class Node {
+public abstract class Node implements Runnable {
 
   protected NodeConfig config;
   protected NodeID myID;
   protected PerfectPointToPointLinks channel;
   protected NodeIDWrapper nodesWrapper;
+  protected final Logger logger = LogManager.getLogger();
 
 
   /* UTIL METHODS */
@@ -103,5 +107,18 @@ public abstract class Node {
    * @param trID  transaction ID
    */
   abstract public void abortTransaction(int trID);
+
+
+  /* MAIN */
+
+  @Override
+  public void run() {
+    try {
+      channel.startPolling();
+      channel.close();
+    } catch (RuntimeException ex) {
+      logger.warn("{}", ex.getMessage());
+    }
+  }
 
 }

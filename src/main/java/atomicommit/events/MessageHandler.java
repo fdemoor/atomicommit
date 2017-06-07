@@ -53,6 +53,8 @@ public class MessageHandler {
       }
     } else if (type.contains("CONS")) {
       consensusHandler.handle((Object) message);
+    } else if (type.contains("NODE_STOP")) {
+      node.finish();
     }
   }
 

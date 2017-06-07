@@ -9,7 +9,6 @@ import atomicommit.util.node.NodeID;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.Random;
 import java.util.HashMap;
 
 public class MsgHandler0NBACSlave implements EventHandler {

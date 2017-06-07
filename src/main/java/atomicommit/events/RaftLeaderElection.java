@@ -22,7 +22,7 @@ public class RaftLeaderElection implements EventHandler {
     node = n;
     timerHandler = new TimerHandlerConsensus();
     delay = node.getConfig().getMsgDelay();
-    rand = new Random();
+    rand = node.getConfig().getRandom();
   }
 
   private Consensus getInfo(int trID) {

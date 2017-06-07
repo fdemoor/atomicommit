@@ -8,8 +8,6 @@ import atomicommit.util.node.NodeID;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.Random;
-
 public class MsgHandler2PCSlave implements EventHandler {
 
   private final StorageNode node;

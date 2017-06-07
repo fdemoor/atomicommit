@@ -21,15 +21,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.HashMap;
 
-import org.zeromq.ZThread;
-
-public class TransactionManager extends Node implements ZThread.IDetachedRunnable {
+public class TransactionManager extends Node {
 
   private final List<Integer> storageNodes;
   private final HashMap<Integer, TransactionWrapper> transactions;;
   private final Counter transactionIDs;
-
-  private final Logger logger = LogManager.getLogger();
   private int nbTrDone = 0;
   private int nbTrC = 0;
   private int nbTrA = 0;
@@ -45,8 +41,7 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
 
     transactions = new HashMap<Integer,TransactionWrapper>();
 
-    channel = new ZMQChannel(nodesWrapper);
-    channel.setIn(myID);
+    channel = new ZMQChannel(nodesWrapper, this);
     Iterator<Integer> it = storageNodes.iterator();
     while (it.hasNext()) {
       NodeID idNode = nodesWrapper.getNodeID(it.next());
@@ -128,7 +123,7 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
   public int startTransaction() {
     int trID = transactionIDs.get();
     transactionIDs.incr();
-    Transaction tr = new Transaction(trID);
+    Transaction tr = new Transaction(trID, this);
     sendToAllStorageNodes(trID, MessageType.TR_START);
     logger.debug("Transaction Manager #{} starts transaction #{}", myID, trID);
     transactions.put(trID, new TransactionWrapper(tr, storageNodes.size()));
@@ -174,7 +169,8 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
     if (nbTrDone == config.getNbTr()) {
       long duration = System.currentTimeMillis() - startTime;
       logger.info("Took {} ms for {} transactions: {} commited, {} aborted", duration, config.getNbTr(), nbTrC, nbTrA);
-      System.exit(0); // FIXME
+      sendToAllStorageNodes(0, MessageType.NODE_STOP);
+      finish();
     }
   }
 
@@ -210,15 +206,6 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
     while (it.hasNext()) {
       channel.send(nodesWrapper.getNodeID(it.next()), message);
     }
-  }
-
-
-  /* MAIN */
-
-  @Override
-  public void run(Object[] args) {
-    channel.startPolling();
-    channel.close();
   }
 
 }

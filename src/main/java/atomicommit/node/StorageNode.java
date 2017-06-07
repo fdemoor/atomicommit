@@ -26,14 +26,11 @@ import java.util.List;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.zeromq.ZThread;
-
-public class StorageNode extends Node implements ZThread.IDetachedRunnable {
+public class StorageNode extends Node {
 
   private final NodeID trManager;
   private final List<Integer> nodes;
   private final HashMap<Integer, TransactionWrapper> transactions;
-  private final Logger logger = LogManager.getLogger();
 
   StorageNode(NodeConfig conf, int id, int manager, List<Integer> nodesList, NodeIDWrapper wrapper) {
 
@@ -44,8 +41,7 @@ public class StorageNode extends Node implements ZThread.IDetachedRunnable {
     trManager = nodesWrapper.getNodeID(manager);
     transactions = new HashMap<Integer, TransactionWrapper>();
 
-    channel = new ZMQChannel(nodesWrapper);
-    channel.setIn(myID);
+    channel = new ZMQChannel(nodesWrapper, this);
     channel.addOut(trManager);
     Iterator<Integer> it = nodes.iterator();
     while (it.hasNext()) {
@@ -96,7 +92,7 @@ public class StorageNode extends Node implements ZThread.IDetachedRunnable {
 
   public void startTransaction(int trID) {
     logger.debug("Storage Node #{} starts transaction #{}", myID, trID);
-    Transaction tr = new Transaction(trID);
+    Transaction tr = new Transaction(trID, this);
     ProtocolInfo info;
     switch (config.getTrProtocol()) {
       case ZERO_NBAC:
@@ -207,15 +203,6 @@ public class StorageNode extends Node implements ZThread.IDetachedRunnable {
       logger.warn("Storage Node #{} - Message not coming from manager #{} but from #{}", myID, trManager, id);
     }
     return test;
-  }
-
-
-  /* MAIN */
-
-  @Override
-  public void run(Object[] args) {
-    channel.startPolling();
-    channel.close();
   }
 
 }

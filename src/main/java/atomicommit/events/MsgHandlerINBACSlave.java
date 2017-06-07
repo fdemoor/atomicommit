@@ -176,7 +176,7 @@ public class MsgHandlerINBACSlave implements EventHandler {
     }
     if (i <= f) {
       if (i < f) {
-        node.sendToNode(trID, type, node.getID());
+        info.addVote0(node.getID(), info.getVal());
       }
       node.setTimeoutEvent(timerHandler, delay, 1, (Object) trID);
     } else {

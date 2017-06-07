@@ -7,6 +7,7 @@ import atomicommit.util.node.NodeIDWrapper;
 import atomicommit.util.msg.Message;
 import atomicommit.util.msg.MessageType;
 import atomicommit.util.misc.Pair;
+import atomicommit.node.Node;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -27,17 +28,24 @@ public class ZMQChannel implements PerfectPointToPointLinks {
 
   private final ZMQ.Context context;
   private ZMQ.Socket in;
-  private NodeID owner;
+  private final Node owner;
   private HashMap<NodeID,ZMQ.Socket> out;
   private final ZLoop reactor;
   private final NodeIDWrapper nodesWrapper;
   private final Logger logger = LogManager.getLogger();
 
-  public ZMQChannel(NodeIDWrapper wrapper) {
+  public ZMQChannel(NodeIDWrapper wrapper, Node n) {
     nodesWrapper = wrapper;
     context = ZMQ.context(1);
     out = new HashMap<NodeID,ZMQ.Socket>();
     reactor = new ZLoop();
+    owner = n;
+    in = context.socket(ZMQ.DEALER);
+    NodeID id = owner.getID();
+    in.bind(id.getIP());
+    ZMQ.Socket skt = context.socket(ZMQ.DEALER);
+    skt.connect(id.getIP());
+    out.put(id, skt);
   }
 
   private class ZMQTimerHandler implements ZLoop.IZLoopHandler {
@@ -72,16 +80,21 @@ public class ZMQChannel implements PerfectPointToPointLinks {
 
   }
 
-  public void setIn(NodeID id) {
-    if (owner != null) {
-      logger.warn("An In-Socket is already defined");
+  private class DelayedMessage implements EventHandler {
+
+    private final NodeID dest;
+    private final Message msg;
+
+    DelayedMessage(NodeID id, Message message) {
+      dest = id;
+      msg = message;
     }
-    owner = id;
-    in = context.socket(ZMQ.DEALER);
-    in.bind(id.getIP());
-    ZMQ.Socket skt = context.socket(ZMQ.DEALER);
-    skt.connect(id.getIP());
-    out.put(id, skt);
+
+    @Override
+    public void handle(Object arg_) {
+      send(dest, msg);
+    }
+
   }
 
   public void addOut(NodeID id) {
@@ -91,8 +104,18 @@ public class ZMQChannel implements PerfectPointToPointLinks {
   }
 
   public void send(NodeID dest, Message message) {
+
+    /* Try crash */
+    if (owner.getConfig().crash()) {
+      owner.finish();
+    } else if (owner.getConfig().networkFailure()) {
+      EventHandler handler = new DelayedMessage(dest, message);
+      setTimeoutEventHandler(handler, owner.getConfig().getRandomDelay(), 1, null);
+      return;
+    }
+
     ZMQ.Socket skt = out.get(dest);
-    if (message.getSrc() != owner) {
+    if (message.getSrc() != owner.getID()) {
       logger.error("Trying to send a message from someone else");
     }
     if (skt == null) {
@@ -176,6 +199,7 @@ public class ZMQChannel implements PerfectPointToPointLinks {
   }
 
   public void close() {
+    reactor.destroy();
     in.close();
     Collection<ZMQ.Socket> skts = out.values();
     Iterator<ZMQ.Socket> it = skts.iterator();
