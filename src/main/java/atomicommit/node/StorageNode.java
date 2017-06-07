@@ -4,9 +4,11 @@ import atomicommit.events.EventHandler;
 import atomicommit.events.MessageHandler;
 import atomicommit.events.MsgHandler2PCSlave;
 import atomicommit.events.MsgHandler0NBACSlave;
+import atomicommit.events.MsgHandlerINBACSlave;
 import atomicommit.events.RaftLeaderElection;
 import atomicommit.events.ProtocolInfo;
 import atomicommit.events.TR0NBACInfo;
+import atomicommit.events.TRINBACInfo;
 import atomicommit.events.Consensus;
 import atomicommit.util.msg.MessageType;
 import atomicommit.util.msg.Message;
@@ -54,11 +56,15 @@ public class StorageNode extends Node implements ZThread.IDetachedRunnable {
     }
     MessageHandler msgHandler = new MessageHandler(this);
     switch (config.getTrProtocol()) {
-      case TWO_PHASE_COMMIT:
-        msgHandler.setTransactionHandler(new MsgHandler2PCSlave(this));
-        break;
       case ZERO_NBAC:
         msgHandler.setTransactionHandler(new MsgHandler0NBACSlave(this));
+        break;
+      case INBAC:
+        msgHandler.setTransactionHandler(new MsgHandlerINBACSlave(this));
+        break;
+      case TWO_PHASE_COMMIT:
+      default:
+        msgHandler.setTransactionHandler(new MsgHandler2PCSlave(this));
         break;
     }
     msgHandler.setConsensusHandler(new RaftLeaderElection(this));
@@ -91,10 +97,17 @@ public class StorageNode extends Node implements ZThread.IDetachedRunnable {
   public void startTransaction(int trID) {
     logger.debug("Storage Node #{} starts transaction #{}", myID, trID);
     Transaction tr = new Transaction(trID);
-    ProtocolInfo info = null;
+    ProtocolInfo info;
     switch (config.getTrProtocol()) {
       case ZERO_NBAC:
         info = new TR0NBACInfo();
+        break;
+      case INBAC:
+        info = new TRINBACInfo();
+        break;
+      case TWO_PHASE_COMMIT:
+      default:
+        info = null;
         break;
     }
     transactions.put(trID, new TransactionWrapper(tr, info, nodes.size() -1));

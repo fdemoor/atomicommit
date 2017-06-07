@@ -23,7 +23,7 @@ public class TRINBACInfo implements ProtocolInfo {
   private boolean decision;
   private boolean proposal;
   private int cnt;
-  private int cnt_help;
+  private int cntHelp;
   private final Logger logger = LogManager.getLogger();
 
   public TRINBACInfo() {
@@ -35,7 +35,7 @@ public class TRINBACInfo implements ProtocolInfo {
     collectionHelp = new HashSet<Pair<NodeID, Boolean>>();
     wait = false;
     cnt = 0;
-    cnt_help = 0;
+    cntHelp = 0;
   }
 
   public void incrPhase() {
@@ -73,7 +73,7 @@ public class TRINBACInfo implements ProtocolInfo {
   }
 
   public void cntHelpIncr() {
-    cnt_help++;
+    cntHelp++;
   }
 
   public void cntIncr() {
@@ -84,8 +84,16 @@ public class TRINBACInfo implements ProtocolInfo {
     wait = b;
   }
 
+  public boolean isWaiting() {
+    return wait;
+  }
+
   public int cntGet() {
     return cnt;
+  }
+
+  public int cntHelpGet() {
+    return cntHelp;
   }
 
   public void addVote0(NodeID node, boolean vote) {
@@ -126,9 +134,34 @@ public class TRINBACInfo implements ProtocolInfo {
     }
   }
 
-  public boolean getAnd1() {
+  public boolean checkBackUpsVote1(int n, int f) {
+    if (collection1.size() != f+1) {
+      return false;
+    } else {
+      Iterator<Pair<NodeID, Set<Pair<NodeID, Boolean>>>> it = collection1.iterator();
+      boolean foundF = false;
+      while (it.hasNext()) {
+        int size = it.next().getSecond().size();
+        if (size == f) {
+          if (foundF) {
+            return false;
+          } else {
+            foundF = true;
+          }
+        } else if (size != n) {
+          return false;
+        }
+      }
+      return true;
+    }
+  }
+
+  public boolean getAnd1(int n) {
     Iterator<Pair<NodeID, Set<Pair<NodeID, Boolean>>>> it = collection1.iterator();
-    Set<Pair<NodeID, Boolean>> votes = it.next().getSecond();
+    Set<Pair<NodeID, Boolean>> votes;
+    do {
+      votes = it.next().getSecond();
+    } while (votes.size() != n);
     Iterator<Pair<NodeID, Boolean>> it2 = votes.iterator();
     while (it2.hasNext()) {
       if (!it2.next().getSecond()) {
@@ -155,6 +188,20 @@ public class TRINBACInfo implements ProtocolInfo {
     }
     boolean b = (values.size() == n);
     return new Pair<Boolean,Boolean>(b, and);
+  }
+
+  public boolean checkHelp(int n) {
+    return (collectionHelp.size() == n);
+  }
+
+  public boolean getAndHelp() {
+    Iterator<Pair<NodeID,Boolean>> it = collectionHelp.iterator();
+    while (it.hasNext()) {
+      if (!it.next().getSecond()) {
+        return false;
+      }
+    }
+    return true;
   }
 
 }

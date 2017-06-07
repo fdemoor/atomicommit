@@ -54,11 +54,13 @@ public class TransactionManager extends Node implements ZThread.IDetachedRunnabl
     }
     MessageHandler msgHandler = new MessageHandler(this);
     switch (config.getTrProtocol()) {
-      case TWO_PHASE_COMMIT:
-        msgHandler.setTransactionHandler(new MsgHandler2PCMaster(this));
-        break;
       case ZERO_NBAC:
+      case INBAC:
         msgHandler.setTransactionHandler(new MsgHandler0NBACMaster(this));
+        break;
+      case TWO_PHASE_COMMIT:
+      default:
+        msgHandler.setTransactionHandler(new MsgHandler2PCMaster(this));
         break;
     }
     channel.setMessageEventHandler(msgHandler);

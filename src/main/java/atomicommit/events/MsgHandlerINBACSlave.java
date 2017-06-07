@@ -85,10 +85,31 @@ public class MsgHandlerINBACSlave implements EventHandler {
         if (!info.decided() && !info.proposed()) {
 
           if (i < f) {
-            // TODO
+
+            if (info.checkBackUpsVote1(node.getTransanctionNbNodes(trID), f)) {
+              boolean decision = info.getAnd1(node.getTransanctionNbNodes(trID));
+              info.decide(decision);
+              decide(trID, decision);
+
+            } else {
+              Pair<Boolean,Boolean> exists = info.checkExistVote1(f);
+              Consensus cons = getCons(trID);
+
+              if (exists.getFirst()) {
+                info.propose(exists.getSecond());
+                cons.setVote(exists.getSecond());
+
+              } else {
+                info.propose(false);
+                cons.setVote(false);
+              }
+
+              node.sendToNode(trID, MessageType.CONS_START, node.getID());
+            }
+
           } else {
+
             info.incrPhase();
-            Set<Pair<NodeID,Boolean>> collection_val = new HashSet<Pair<NodeID,Boolean>>();
             Iterator<Pair<NodeID, Set<Pair<NodeID, Boolean>>>> it2 = info.getVote1().iterator();
             while (it2.hasNext()) {
               info.addVote0(it2.next().getSecond());
@@ -96,7 +117,7 @@ public class MsgHandlerINBACSlave implements EventHandler {
             info.addVote0(node.getID(), info.getVal());
 
             if (info.checkAllVote1(node.getTransanctionNbNodes(trID), f)) {
-              boolean decision = info.getAnd1();
+              boolean decision = info.getAnd1(node.getTransanctionNbNodes(trID));
               info.decide(decision);
               decide(trID, decision);
 
@@ -122,12 +143,12 @@ public class MsgHandlerINBACSlave implements EventHandler {
               while (it3.hasNext()) {
                 node.sendToNode(trID, MessageType.TR_HELP, it3.next());
               }
+              checkWait(trID);
             }
           }
         }
       }
     }
-
   }
 
   public MsgHandlerINBACSlave(StorageNode n) {
@@ -189,7 +210,57 @@ public class MsgHandlerINBACSlave implements EventHandler {
     if (i >= f) {
       info.addVoteHelp(votes);
       info.cntHelpIncr();
+      checkWait(trID);
     }
+  }
+
+  private void checkWait(int trID) {
+    TRINBACInfo info = getInfo(trID);
+    int i = node.getIDWrapper().getRank(node.getID());
+    if ( (info.cntGet() + info.cntHelpGet() >= node.getTransanctionNbNodes(trID) - f)
+      && info.isWaiting() && !info.proposed() && !info.decided() && i >= f ) {
+
+        info.setWait(false);
+        if (info.checkAllVote1(node.getTransanctionNbNodes(trID), f)) {
+          boolean decision = info.getAnd1(node.getTransanctionNbNodes(trID));
+          info.decide(decision);
+          decide(trID, decision);
+
+        } else if (info.cntGet() >= 1) {
+          Pair<Boolean,Boolean> exists = info.checkExistVote1(f);
+          Consensus cons = getCons(trID);
+
+          if (exists.getFirst()) {
+            info.propose(exists.getSecond());
+            cons.setVote(exists.getSecond());
+
+          } else {
+            info.propose(false);
+            cons.setVote(false);
+          }
+
+          node.sendToNode(trID, MessageType.CONS_START, node.getID());
+
+        } else {
+
+          Consensus cons = getCons(trID);
+
+          if (info.checkHelp(node.getTransanctionNbNodes(trID))) {
+
+            boolean b = info.getAndHelp();
+            info.propose(b);
+            cons.setVote(b);
+
+          } else {
+            info.propose(false);
+            cons.setVote(false);
+          }
+
+          node.sendToNode(trID, MessageType.CONS_START, node.getID());
+
+        }
+
+      }
   }
 
   private void handleColl(int trID, NodeID src, Set<Pair<NodeID,Boolean>> votes) {

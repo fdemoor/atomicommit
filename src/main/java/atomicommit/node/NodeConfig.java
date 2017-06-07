@@ -5,7 +5,8 @@ public class NodeConfig {
   /** Transaction protocols */
   enum TrProtocol {
     TWO_PHASE_COMMIT,
-    ZERO_NBAC
+    ZERO_NBAC,
+    INBAC
   }
 
   private final TrProtocol trProtocol; /* Atomic commit protocol used */
