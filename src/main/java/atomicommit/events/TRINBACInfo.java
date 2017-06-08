@@ -126,7 +126,7 @@ public class TRINBACInfo implements ProtocolInfo {
     } else {
       Iterator<Pair<NodeID, Set<Pair<NodeID, Boolean>>>> it = collection1.iterator();
       while (it.hasNext()) {
-        if (it.next().getSecond().size() != n) {
+        if (it.next().getSecond().size() != n+1) {
           return false;
         }
       }
@@ -148,7 +148,7 @@ public class TRINBACInfo implements ProtocolInfo {
           } else {
             foundF = true;
           }
-        } else if (size != n) {
+        } else if (size != n+1) {
           return false;
         }
       }
@@ -161,7 +161,7 @@ public class TRINBACInfo implements ProtocolInfo {
     Set<Pair<NodeID, Boolean>> votes;
     do {
       votes = it.next().getSecond();
-    } while (votes.size() != n);
+    } while (votes.size() != n+1);
     Iterator<Pair<NodeID, Boolean>> it2 = votes.iterator();
     while (it2.hasNext()) {
       if (!it2.next().getSecond()) {
@@ -186,12 +186,12 @@ public class TRINBACInfo implements ProtocolInfo {
         }
       }
     }
-    boolean b = (values.size() == n);
+    boolean b = (values.size() == n+1);
     return new Pair<Boolean,Boolean>(b, and);
   }
 
   public boolean checkHelp(int n) {
-    return (collectionHelp.size() == n);
+    return (collectionHelp.size() == n+1);
   }
 
   public boolean getAndHelp() {

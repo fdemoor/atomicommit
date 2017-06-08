@@ -76,4 +76,23 @@ public class Message {
     return votes;
   }
 
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append("[");
+    sb.append(id);
+    sb.append(", ");
+    sb.append(type);
+    if (key != null) {
+      sb.append(", ");
+      sb.append(key);
+    }
+    if (votes != null) {
+      sb.append(", ");
+      sb.append(votes);
+    }
+    sb.append("]");
+    return sb.toString();
+  }
+
 }

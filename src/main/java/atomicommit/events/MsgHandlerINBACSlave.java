@@ -67,6 +67,7 @@ public class MsgHandlerINBACSlave implements EventHandler {
 
         if (i < f) {
           node.sendToAllStorageNodes(trID, MessageType.TR_COLL, info.getVote0());
+          info.addVote1(node.getID(), info.getVote0());
           info.incrPhase();
           node.setTimeoutEvent(timerHandler, delay, 1, (Object) trID);
 

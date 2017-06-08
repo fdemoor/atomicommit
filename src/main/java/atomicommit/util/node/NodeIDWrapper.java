@@ -41,7 +41,7 @@ public class NodeIDWrapper {
    * @param type  0 if manager, anything else if storage node
    */
   public void add(int d, String ip, int type) {
-    NodeID node = new NodeID(d, ip);
+    NodeID node = new NodeID(d, ip, type);
     nodes.put(d, node);
     if (type != 0) {
       ids.add(d);

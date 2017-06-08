@@ -23,6 +23,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.concurrent.TimeUnit;
 
 public class ZMQChannel implements PerfectPointToPointLinks {
 
@@ -80,23 +81,6 @@ public class ZMQChannel implements PerfectPointToPointLinks {
 
   }
 
-  private class DelayedMessage implements EventHandler {
-
-    private final NodeID dest;
-    private final Message msg;
-
-    DelayedMessage(NodeID id, Message message) {
-      dest = id;
-      msg = message;
-    }
-
-    @Override
-    public void handle(Object arg_) {
-      send(dest, msg);
-    }
-
-  }
-
   public void addOut(NodeID id) {
     ZMQ.Socket skt = context.socket(ZMQ.DEALER);
     skt.connect(id.getIP());
@@ -106,12 +90,16 @@ public class ZMQChannel implements PerfectPointToPointLinks {
   public void send(NodeID dest, Message message) {
 
     /* Try crash */
-    if (owner.getConfig().crash()) {
+    if (owner.getConfig().crash() && owner.getID().getType() != 0) {
       owner.finish();
     } else if (owner.getConfig().networkFailure()) {
-      EventHandler handler = new DelayedMessage(dest, message);
-      setTimeoutEventHandler(handler, owner.getConfig().getRandomDelay(), 1, null);
-      return;
+      try {
+        int delay = owner.getConfig().getRandomDelay();
+        logger.warn("Delaying message {} to Node #{} for {} ms", message, dest, delay);
+        TimeUnit.MILLISECONDS.sleep(delay);
+      } catch (InterruptedException ex) {
+        logger.warn(ex.getMessage());
+      }
     }
 
     ZMQ.Socket skt = out.get(dest);
@@ -129,7 +117,6 @@ public class ZMQChannel implements PerfectPointToPointLinks {
       Set<Pair<NodeID,Boolean>> votes = message.getVotes();
       if (key != null) {
         msg.add("" + key);
-        logger.debug("Node #{} sent [{}, {}, {}] to node #{}", message.getSrc(), message.getID(), message.getType(), key, dest);
       } else if (votes != null) {
         Iterator<Pair<NodeID,Boolean>> it = votes.iterator();
         while (it.hasNext()) {
@@ -137,12 +124,11 @@ public class ZMQChannel implements PerfectPointToPointLinks {
           msg.add("" + pair.getFirst().getID());
           msg.add(pair.getSecond().toString());
         }
-        logger.debug("Node #{} sent [{}, {}, {}] to node #{}", message.getSrc(), message.getID(), message.getType(), votes, dest);
       } else {
-        logger.debug("Node #{} sent [{}, {}] to node #{}", message.getSrc(), message.getID(), message.getType(), dest);
       }
       msg.send(skt);
     }
+    logger.debug("Node #{} sent {} to node #{}", message.getSrc(), message, dest);
   }
 
   public Message deliver() {
@@ -154,7 +140,6 @@ public class ZMQChannel implements PerfectPointToPointLinks {
     Message message = null;
     if (key == null) {
       message = new Message(src, id, type);
-      logger.debug("Node #{} received [{}, {}] from node #{}", owner, message.getID(), message.getType(), message.getSrc());
     } else {
       switch (type) {
         case TR_COLL:
@@ -167,15 +152,14 @@ public class ZMQChannel implements PerfectPointToPointLinks {
             vote = msg.popString();
           }
           message = new Message(src, id, type, votes);
-          logger.debug("Node #{} received [{}, {}, {}] from node #{}", owner, message.getID(), message.getType(), votes, message.getSrc());
           break;
         default:
           int k = Integer.parseInt(key);
           message = new Message(src, id, type, k);
-          logger.debug("Node #{} received [{}, {}, {}] from node #{}", owner, message.getID(), message.getType(), k, message.getSrc());
           break;
       }
     }
+    logger.debug("Node #{} received {} from node #{}", owner.getID(), message, message.getSrc());
     return message;
   }
 

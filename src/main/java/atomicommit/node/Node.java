@@ -44,6 +44,7 @@ public abstract class Node implements Runnable {
 
   /** Stops node from running */
   public void finish() {
+    logger.warn("Node #{} stops", myID);
     channel.close();
   }
 
