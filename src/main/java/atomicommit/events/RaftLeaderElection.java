@@ -77,7 +77,7 @@ public class RaftLeaderElection implements EventHandler {
   private void handleYES(int trID, NodeID src) {
     Consensus info = getInfo(trID);
     info.addAck(src);
-    if (info.enoughAcks(node.getTransanctionNbNodes(trID)) && !info.isDone()) {
+    if (info.enoughAcks(info.getNbInvolvedNodes()) && !info.isDone()) {
       lead(trID);
     }
   }

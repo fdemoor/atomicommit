@@ -12,23 +12,35 @@ public class Transaction {
 
   private final Node node;
   private final int myID;
+  private boolean done;
   private final Logger logger = LogManager.getLogger();
 
   public Transaction(int id, Node n) {
     myID = id;
     node = n;
+    done = false;
   }
 
   public int getID() {
     return myID;
   }
 
-  public void commit() {
-
+  public boolean commit() {
+    if (!done) {
+      done = true;
+      logger.debug("Node #{} commits transaction #{}", node.getID(), myID);
+      return true;
+    }
+    return false;
   }
 
-  public void abort() {
-
+  public boolean abort() {
+    if (!done) {
+      done = true;
+      logger.debug("Node #{} aborts transaction #{}", node.getID(), myID);
+      return true;
+    }
+    return false;
   }
 
   public boolean propose() {

@@ -8,12 +8,12 @@ import atomicommit.util.node.NodeID;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-public class MsgHandler2PCMaster implements EventHandler {
+public class MsgHandler3PCMaster implements EventHandler {
 
   private final TransactionManager trMng;
   private final Logger logger = LogManager.getLogger();
 
-  public MsgHandler2PCMaster(TransactionManager manager) {
+  public MsgHandler3PCMaster(TransactionManager manager) {
     trMng = manager;
   }
 
@@ -27,12 +27,19 @@ public class MsgHandler2PCMaster implements EventHandler {
     }
   }
 
+  private void handleAck(int trID, NodeID id) {
+    TRPhaseInfo info = getInfo(trID);
+    if (info.setAck(id)) {
+      trMng.sendToAllStorageNodes(trID, MessageType.TR_COMMIT);
+      trMng.commitTransaction(trID);
+    }
+  }
+
   private void handleVote(int trID, NodeID id, boolean vote) {
     TRPhaseInfo info = getInfo(trID);
     if (info.setVote(id, vote)) {
       if (info.getDecision()) {
-        trMng.sendToAllStorageNodes(trID, MessageType.TR_COMMIT);
-        trMng.commitTransaction(trID);
+        trMng.sendToAllStorageNodes(trID, MessageType.TR_PREPARE);
       } else {
         trMng.sendToAllStorageNodes(trID, MessageType.TR_ABORT);
         trMng.abortTransaction(trID);;
@@ -51,6 +58,9 @@ public class MsgHandler2PCMaster implements EventHandler {
         break;
       case TR_NO:
         handleVote(trID, src, false);
+        break;
+      case TR_ACK:
+        handleAck(trID, src);
         break;
     }
   }

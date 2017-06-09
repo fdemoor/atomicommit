@@ -5,7 +5,7 @@ import atomicommit.util.node.NodeID;
 import java.util.List;
 import java.util.ArrayList;
 
-public class Consensus implements ProtocolInfo {
+public class Consensus extends ProtocolInfo {
 
   private boolean started;
   private boolean myVote;
@@ -15,7 +15,8 @@ public class Consensus implements ProtocolInfo {
   private boolean tryingLead;
   private int phase;
 
-  public Consensus() {
+  public Consensus(int n) {
+    super(n);
     started = false;
     myAcks = new ArrayList<NodeID>();
     elected = false;

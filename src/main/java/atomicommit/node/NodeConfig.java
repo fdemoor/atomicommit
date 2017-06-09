@@ -7,6 +7,7 @@ public class NodeConfig {
   /** Transaction protocols */
   enum TrProtocol {
     TWO_PHASE_COMMIT,
+    THREE_PHASE_COMMIT,
     ZERO_NBAC,
     INBAC
   }

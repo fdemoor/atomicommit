@@ -8,7 +8,13 @@ import atomicommit.util.msg.MessageType;
 import atomicommit.util.node.NodeID;
 import atomicommit.util.node.NodeIDWrapper;
 import atomicommit.events.EventHandler;
+import atomicommit.events.ProtocolInfo;
+import atomicommit.events.Consensus;
+import atomicommit.transaction.Transaction;
 import atomicommit.channels.PerfectPointToPointLinks;
+import atomicommit.channels.ZMQChannel;
+
+import java.util.HashMap;
 
 public abstract class Node implements Runnable {
 
@@ -16,7 +22,60 @@ public abstract class Node implements Runnable {
   protected NodeID myID;
   protected PerfectPointToPointLinks channel;
   protected NodeIDWrapper nodesWrapper;
+  protected final HashMap<Integer, TransactionWrapper> transactions;
   protected final Logger logger = LogManager.getLogger();
+
+  Node(NodeConfig conf, int id, NodeIDWrapper wrapper) {
+    config = conf;
+    nodesWrapper = wrapper;
+    myID = nodesWrapper.getNodeID(id);
+    transactions  = new HashMap<Integer,TransactionWrapper>();
+    channel = new ZMQChannel(nodesWrapper, this);
+  }
+
+
+  /* TRANSACTION WRAPPER */
+
+  protected class TransactionWrapper {
+
+    protected final Transaction transaction;
+    private final ProtocolInfo info;
+    private ProtocolInfo consInfo;
+
+    TransactionWrapper(Transaction tr, ProtocolInfo prt) {
+      transaction = tr;
+      info = prt;
+      consInfo = null;
+    }
+
+  }
+
+  /** Returns info structure associated to a transaction
+   * @param trID  transaction identifier
+   * @return  protocol info structure
+   */
+  public ProtocolInfo getTransactionInfo(int trID) {
+    TransactionWrapper wrapper = transactions.get(trID);
+    if (wrapper == null) {
+      logger.error("No transaction #{} exists", trID);
+    }
+    return transactions.get(trID).info;
+  }
+
+  /** Returns info structure associated to a consensus
+   * or create it if not existing yet
+   * @param trID  consensus identifier
+   * @return  protocol info structure
+   */
+  public ProtocolInfo getConsensusInfo(int trID) {
+    TransactionWrapper wrapper = transactions.get(trID);
+    ProtocolInfo info = wrapper.consInfo;
+    if (info == null) {
+      info = new Consensus(wrapper.info.getNbInvolvedNodes());
+      wrapper.consInfo = info;
+    }
+    return info;
+  }
 
 
   /* UTIL METHODS */
@@ -118,7 +177,7 @@ public abstract class Node implements Runnable {
       channel.startPolling();
       channel.close();
     } catch (RuntimeException ex) {
-      logger.warn("{}", ex.getMessage());
+      logger.warn("Run " + ex.getMessage());
     }
   }
 

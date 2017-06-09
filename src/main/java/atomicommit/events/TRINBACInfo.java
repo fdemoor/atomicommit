@@ -10,7 +10,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Iterator;
 
-public class TRINBACInfo implements ProtocolInfo {
+public class TRINBACInfo extends ProtocolInfo {
 
   private int phase;
   private boolean proposed;
@@ -26,7 +26,8 @@ public class TRINBACInfo implements ProtocolInfo {
   private int cntHelp;
   private final Logger logger = LogManager.getLogger();
 
-  public TRINBACInfo() {
+  public TRINBACInfo(int n) {
+    super(n);
     phase = 0;
     proposed = false;
     decided = false;

@@ -3,6 +3,7 @@ package atomicommit.node;
 import atomicommit.events.EventHandler;
 import atomicommit.events.MessageHandler;
 import atomicommit.events.MsgHandler2PCSlave;
+import atomicommit.events.MsgHandler3PCSlave;
 import atomicommit.events.MsgHandler0NBACSlave;
 import atomicommit.events.MsgHandlerINBACSlave;
 import atomicommit.events.RaftLeaderElection;
@@ -21,7 +22,6 @@ import atomicommit.transaction.Transaction;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Iterator;
 import java.util.Set;
@@ -30,18 +30,14 @@ public class StorageNode extends Node {
 
   private final NodeID trManager;
   private final List<Integer> nodes;
-  private final HashMap<Integer, TransactionWrapper> transactions;
 
   StorageNode(NodeConfig conf, int id, int manager, List<Integer> nodesList, NodeIDWrapper wrapper) {
 
-    config = conf;
-    nodesWrapper = wrapper;
-    myID = nodesWrapper.getNodeID(id);
+    super(conf, id, wrapper);
+
     nodes = nodesList;
     trManager = nodesWrapper.getNodeID(manager);
-    transactions = new HashMap<Integer, TransactionWrapper>();
 
-    channel = new ZMQChannel(nodesWrapper, this);
     channel.addOut(trManager);
     Iterator<Integer> it = nodes.iterator();
     while (it.hasNext()) {
@@ -58,6 +54,9 @@ public class StorageNode extends Node {
       case INBAC:
         msgHandler.setTransactionHandler(new MsgHandlerINBACSlave(this));
         break;
+      case THREE_PHASE_COMMIT:
+        msgHandler.setTransactionHandler(new MsgHandler3PCSlave(this));
+        break;
       case TWO_PHASE_COMMIT:
       default:
         msgHandler.setTransactionHandler(new MsgHandler2PCSlave(this));
@@ -65,25 +64,6 @@ public class StorageNode extends Node {
     }
     msgHandler.setConsensusHandler(new RaftLeaderElection(this));
     channel.setMessageEventHandler(msgHandler);
-
-  }
-
-
-  /* TRANSACTION WRAPPER */
-
-  private class TransactionWrapper {
-
-    private final Transaction transaction;
-    private final ProtocolInfo info;
-    private final int nbInvolvedNodes;
-    private ProtocolInfo consInfo;
-
-    TransactionWrapper(Transaction tr, ProtocolInfo prt, int n) {
-      transaction = tr;
-      info = prt;
-      nbInvolvedNodes = n;
-      consInfo = null;
-    }
 
   }
 
@@ -96,25 +76,17 @@ public class StorageNode extends Node {
     ProtocolInfo info;
     switch (config.getTrProtocol()) {
       case ZERO_NBAC:
-        info = new TR0NBACInfo();
+        info = new TR0NBACInfo(nodes.size() -1);
         break;
       case INBAC:
-        info = new TRINBACInfo();
+        info = new TRINBACInfo(nodes.size() -1);
         break;
       case TWO_PHASE_COMMIT:
       default:
         info = null;
         break;
     }
-    transactions.put(trID, new TransactionWrapper(tr, info, nodes.size() -1));
-  }
-
-  public ProtocolInfo getTransactionInfo(int trID) {
-    TransactionWrapper wrapper = transactions.get(trID);
-    if (wrapper == null) {
-      logger.error("No transaction #{} exists", trID);
-    }
-    return transactions.get(trID).info;
+    transactions.put(trID, new TransactionWrapper(tr, info));
   }
 
   public boolean getTransanctionProposition(int trID) {
@@ -122,29 +94,14 @@ public class StorageNode extends Node {
     return tr.propose();
   }
 
-  public ProtocolInfo getConsensusInfo(int trID) {
-    ProtocolInfo info = transactions.get(trID).consInfo;
-    if (info == null) {
-      info = new Consensus();
-      transactions.get(trID).consInfo = info;
-    }
-    return info;
-  }
-
   @Override
   public void commitTransaction(int trID) {
     transactions.get(trID).transaction.commit();
-    logger.debug("Storage Node #{} commits transaction #{}", myID, trID);
   }
 
   @Override
   public void abortTransaction(int trID) {
     transactions.get(trID).transaction.abort();
-    logger.debug("Storage Node #{} aborts transaction #{}", myID, trID);
-  }
-
-  public int getTransanctionNbNodes(int trID) {
-    return transactions.get(trID).nbInvolvedNodes;
   }
 
 

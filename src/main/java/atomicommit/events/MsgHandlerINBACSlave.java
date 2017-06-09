@@ -87,8 +87,8 @@ public class MsgHandlerINBACSlave implements EventHandler {
 
           if (i < f) {
 
-            if (info.checkBackUpsVote1(node.getTransanctionNbNodes(trID), f)) {
-              boolean decision = info.getAnd1(node.getTransanctionNbNodes(trID));
+            if (info.checkBackUpsVote1(info.getNbInvolvedNodes(), f)) {
+              boolean decision = info.getAnd1(info.getNbInvolvedNodes());
               info.decide(decision);
               decide(trID, decision);
 
@@ -117,8 +117,8 @@ public class MsgHandlerINBACSlave implements EventHandler {
             }
             info.addVote0(node.getID(), info.getVal());
 
-            if (info.checkAllVote1(node.getTransanctionNbNodes(trID), f)) {
-              boolean decision = info.getAnd1(node.getTransanctionNbNodes(trID));
+            if (info.checkAllVote1(info.getNbInvolvedNodes(), f)) {
+              boolean decision = info.getAnd1(info.getNbInvolvedNodes());
               info.decide(decision);
               decide(trID, decision);
 
@@ -216,12 +216,12 @@ public class MsgHandlerINBACSlave implements EventHandler {
   private void checkWait(int trID) {
     TRINBACInfo info = getInfo(trID);
     int i = node.getIDWrapper().getRank(node.getID());
-    if ( (info.cntGet() + info.cntHelpGet() >= node.getTransanctionNbNodes(trID) - f)
+    if ( (info.cntGet() + info.cntHelpGet() >= info.getNbInvolvedNodes() - f)
       && info.isWaiting() && !info.proposed() && !info.decided() && i >= f ) {
 
         info.setWait(false);
-        if (info.checkAllVote1(node.getTransanctionNbNodes(trID), f)) {
-          boolean decision = info.getAnd1(node.getTransanctionNbNodes(trID));
+        if (info.checkAllVote1(info.getNbInvolvedNodes(), f)) {
+          boolean decision = info.getAnd1(info.getNbInvolvedNodes());
           info.decide(decision);
           decide(trID, decision);
 
@@ -244,7 +244,7 @@ public class MsgHandlerINBACSlave implements EventHandler {
 
           Consensus cons = getCons(trID);
 
-          if (info.checkHelp(node.getTransanctionNbNodes(trID))) {
+          if (info.checkHelp(info.getNbInvolvedNodes())) {
 
             boolean b = info.getAndHelp();
             info.propose(b);

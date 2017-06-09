@@ -98,7 +98,7 @@ public class ZMQChannel implements PerfectPointToPointLinks {
         logger.warn("Delaying message {} to Node #{} for {} ms", message, dest, delay);
         TimeUnit.MILLISECONDS.sleep(delay);
       } catch (InterruptedException ex) {
-        logger.warn(ex.getMessage());
+        logger.warn("Send " + ex.getMessage());
       }
     }
 

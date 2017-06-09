@@ -8,7 +8,7 @@ import atomicommit.util.node.NodeID;
 import java.util.List;
 import java.util.ArrayList;
 
-public class TR0NBACInfo implements ProtocolInfo {
+public class TR0NBACInfo extends ProtocolInfo {
 
   private boolean myVote;
   private final List<NodeID> myAcks;
@@ -17,7 +17,8 @@ public class TR0NBACInfo implements ProtocolInfo {
   private int phase;
   private final Logger logger = LogManager.getLogger();
 
-  public TR0NBACInfo() {
+  public TR0NBACInfo(int n) {
+    super(n);
     myAcks = new ArrayList<NodeID>();
     decided = false;
     zero = false;

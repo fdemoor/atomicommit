@@ -15,7 +15,7 @@ public class Main {
     NodeIDWrapper wrapper = new NodeIDWrapper();
     int N = 4;
 
-    NodeConfig config = new NodeConfig(NodeConfig.TrProtocol.INBAC, 1000, 1, 1, 42419841);
+    NodeConfig config = new NodeConfig(NodeConfig.TrProtocol.THREE_PHASE_COMMIT, 100, 1, 1, 42419841);
     config.setCrashFailureConfig(0, 0);
 
     int managerID = 0;

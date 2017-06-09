@@ -1,6 +1,16 @@
 package atomicommit.events;
 
 /** Info storage interface for protocols */
-public interface ProtocolInfo {
+public abstract class ProtocolInfo {
+
+  protected final int nbInvolvedNodes;
+
+  ProtocolInfo(int n) {
+    nbInvolvedNodes = n;
+  }
+
+  public int getNbInvolvedNodes() {
+    return nbInvolvedNodes;
+  }
 
 }

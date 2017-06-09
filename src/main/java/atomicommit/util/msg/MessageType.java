@@ -5,6 +5,7 @@ public enum MessageType {
 
   /* Transaction messages */
   TR_XACT,
+  TR_PREPARE,
   TR_COMMIT,
   TR_ABORT,
   TR_YES,
