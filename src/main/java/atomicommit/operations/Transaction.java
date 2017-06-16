@@ -1,4 +1,4 @@
-package atomicommit.transaction;
+package atomicommit.operations;
 
 import atomicommit.node.Node;
 
@@ -13,12 +13,14 @@ public class Transaction {
   private final Node node;
   private final int myID;
   private boolean done;
+  private final ArrayList<Operation> ops;
   private final Logger logger = LogManager.getLogger();
 
   public Transaction(int id, Node n) {
     myID = id;
     node = n;
     done = false;
+    ops = new ArrayList<Operation>();
   }
 
   public int getID() {
@@ -52,6 +54,10 @@ public class Transaction {
     } else {
       return false;
     }
+  }
+
+  public void addOp(Operation op) {
+    ops.add(op);
   }
 
 }

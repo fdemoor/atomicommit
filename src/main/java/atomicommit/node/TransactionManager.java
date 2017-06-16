@@ -12,7 +12,7 @@ import atomicommit.util.node.NodeID;
 import atomicommit.util.node.NodeIDWrapper;
 import atomicommit.util.msg.MessageType;
 import atomicommit.util.msg.Message;
-import atomicommit.transaction.Transaction;
+import atomicommit.operations.Transaction;
 import atomicommit.channels.ZMQChannel;
 
 import org.apache.logging.log4j.LogManager;
@@ -88,16 +88,16 @@ public class TransactionManager extends Node {
   public void commitTransaction(int trID) {
     if (transactions.get(trID).transaction.commit()) {
       nbTrC++;
+      logTransaction();
     }
-    logTransaction();
   }
 
   @Override
   public void abortTransaction(int trID) {
     if (transactions.get(trID).transaction.abort()) {
       nbTrA++;
+      logTransaction();
     }
-    logTransaction();
   }
 
   public void logTransaction() {

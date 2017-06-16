@@ -10,7 +10,7 @@ import atomicommit.util.node.NodeIDWrapper;
 import atomicommit.events.EventHandler;
 import atomicommit.events.ProtocolInfo;
 import atomicommit.events.Consensus;
-import atomicommit.transaction.Transaction;
+import atomicommit.operations.Transaction;
 import atomicommit.channels.PerfectPointToPointLinks;
 import atomicommit.channels.ZMQChannel;
 

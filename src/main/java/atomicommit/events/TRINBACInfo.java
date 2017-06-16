@@ -205,4 +205,8 @@ public class TRINBACInfo extends ProtocolInfo {
     return true;
   }
 
+  public boolean checkVotes0(int n) {
+    return collection0.size() == n;
+  }
+
 }

@@ -69,7 +69,7 @@ public class MsgHandler0NBACSlave implements EventHandler {
 
       } else if (phase == 2) {
         Consensus cons = getCons(trID);
-        if (info.allAcks(node.getTransanctionNbNodes(trID))) {
+        if (info.allAcks(info.getNbInvolvedNodes())) {
           cons.setVote(false);
           logger.debug("Node {} proposes 0 to consensus", node.getID());
         } else {

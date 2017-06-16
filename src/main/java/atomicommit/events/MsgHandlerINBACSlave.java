@@ -191,6 +191,20 @@ public class MsgHandlerINBACSlave implements EventHandler {
     int phase = info.getPhase();
     if (phase == 0) {
       info.addVote0(src, b);
+
+      int i = node.getIDWrapper().getRank(node.getID());
+      boolean receivedAll;
+      if (i < f) {
+        receivedAll = info.checkVotes0(info.getNbInvolvedNodes() + 1);
+      } else if (i == f) {
+        receivedAll = info.checkVotes0(f);
+      } else {
+        receivedAll = false;
+      }
+      if (receivedAll) {
+        node.removeTimeoutEvent();
+        node.setTimeoutEvent(timerHandler, 0, 1, (Object) trID);
+      }
     }
   }
 
@@ -266,6 +280,10 @@ public class MsgHandlerINBACSlave implements EventHandler {
     TRINBACInfo info = getInfo(trID);
     info.addVote1(src, votes);
     info.cntIncr();
+    if (info.cntGet() == f) {
+      node.removeTimeoutEvent();
+      node.setTimeoutEvent(timerHandler, 0, 1, (Object) trID);
+    }
   }
 
   private void handleCONS(int trID, boolean vote) {

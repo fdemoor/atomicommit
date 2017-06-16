@@ -17,7 +17,8 @@ import atomicommit.util.node.NodeID;
 import atomicommit.util.node.NodeIDWrapper;
 import atomicommit.util.misc.Pair;
 import atomicommit.channels.ZMQChannel;
-import atomicommit.transaction.Transaction;
+import atomicommit.operations.Transaction;
+import atomicommit.operations.Operation;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -102,6 +103,10 @@ public class StorageNode extends Node {
   @Override
   public void abortTransaction(int trID) {
     transactions.get(trID).transaction.abort();
+  }
+
+  public void addOpTransaction(Operation op, int trID) {
+    transactions.get(trID).transaction.addOp(op);
   }
 
 
